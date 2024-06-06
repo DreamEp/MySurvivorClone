@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://165n5brcy33j"]
+
+[ext_resource type="Script" path="res://Player/player.gd" id="1_tmjtd"]
+[ext_resource type="Texture2D" uid="uid://btaqguqmffdas" path="res://Textures/Player/player_sprite.png" id="1_wa51t"]
+
+[node name="Player_CharacterBody2D" type="CharacterBody2D"]
+motion_mode = 1
+script = ExtResource("1_tmjtd")
+
+[node name="PlayerSprite" type="Sprite2D" parent="."]
+position = Vector2(-2, -3)
+texture = ExtResource("1_wa51t")
+hframes = 2
