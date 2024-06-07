@@ -43,7 +43,7 @@ var movement_speed: float = 40.0
 func movement():
 	var x_move = Input.get_action_strength("right") - Input.get_action_strength("left")
 	var y_move = Input.get_action_strength("down") - Input.get_action_strength("up")
-	var move = Vector2(x_move, y_move) #Définit le vector du mouvement en interpretant x, et y (direction) 
+	var move = Vector2(x_move, y_move)
 	velocity = move.normalized()*movement_speed
 	move_and_slide()
 
