@@ -19,9 +19,15 @@ hframes = 2
 [node name="Camera2D" type="Camera2D" parent="."]
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+visible = false
 polygon = PackedVector2Array(-7, 9, -4, -2, -5, -5, -7, 0, -11, 2, -12, -3, -5, -11, -4, -16, 2, -16, 3, -11, 9, -5, 12, -4, 11, 2, 4, -3, 6, 9, 1, 12)
 disabled = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -2)
 shape = SubResource("CapsuleShape2D_8lc7i")
+
+[node name="walkTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 0.2
+one_shot = true
