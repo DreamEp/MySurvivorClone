@@ -1,2 +1,5 @@
+res://Ennemy/ennemy_character_body_2d.tscn
+res://Ennemy/ennemy.gd
 res://World/world.tscn
 res://Player/player.tscn
+res://Player/player.gd

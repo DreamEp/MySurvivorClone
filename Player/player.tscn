@@ -1,13 +1,27 @@
-[gd_scene load_steps=3 format=3 uid="uid://165n5brcy33j"]
+[gd_scene load_steps=4 format=3 uid="uid://165n5brcy33j"]
 
 [ext_resource type="Script" path="res://Player/player.gd" id="1_tmjtd"]
 [ext_resource type="Texture2D" uid="uid://btaqguqmffdas" path="res://Textures/Player/player_sprite.png" id="1_wa51t"]
 
-[node name="Player_CharacterBody2D" type="CharacterBody2D"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8lc7i"]
+radius = 5.0
+height = 24.0
+
+[node name="Player_CharacterBody2D" type="CharacterBody2D" groups=["player"]]
 motion_mode = 1
 script = ExtResource("1_tmjtd")
 
-[node name="PlayerSprite" type="Sprite2D" parent="."]
+[node name="PlayerSprite2D" type="Sprite2D" parent="."]
 position = Vector2(-2, -3)
 texture = ExtResource("1_wa51t")
 hframes = 2
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-7, 9, -4, -2, -5, -5, -7, 0, -11, 2, -12, -3, -5, -11, -4, -16, 2, -16, 3, -11, 9, -5, 12, -4, 11, 2, 4, -3, 6, 9, 1, 12)
+disabled = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -2)
+shape = SubResource("CapsuleShape2D_8lc7i")

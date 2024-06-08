@@ -5,6 +5,8 @@
 	- [1. Initialisation - World](#1-initialisation---world)
 	- [2. Character](#2-character)
 		- [2.1. Movement :](#21-movement-)
+	- [3. Ennemy AI](#3-ennemy-ai)
+		- [3.1. Movement :](#31-movement-)
 	- [3 General Settings :](#3-general-settings-)
 
 
@@ -28,11 +30,14 @@ Go to Filter section to play around the graphic quality
 - Add a 2D Sprite to this node (Child node - it's a texture)
 In texture we drag our png 
 In animation we set the Hframes by number of copy (2 in our case)
-- Motion mode to grounded (for supermario where we can fall else floating)
+- Motion mode to floating (grounded for supermario where we can fall else floating)
+- Click on Node (at the right) from player script to create a group for the player
+- Create a camera2D on the player so the camera moove with the player
+- Create a collisionShape2D, at the right change the shape to capsuleshape
 
 <br/>
 To Code : Attach a new script to the selected node
-		
+
 ### 2.1. Movement :
 
 It will define how our player move (go to the code to see more details)
@@ -51,6 +56,36 @@ func _physics_process(delta):
 	movement()	
 ```
 
+## 3. Ennemy AI
+
+- Create a new scene (+ at top of godot interface), and add CharacterBody2D = our Ennemy
+- Save the player to a new folder of the project called Ennemy
+- Add a 2D Sprite to this node (Child node - it's a texture)
+In texture we drag our png 
+In animation we set the Hframes by number of copy (2 in our case)
+- Motion mode to floating (grounded for supermario where we can fall else floating)
+- 3.1
+- Drag the ennemy.tscn to the world scene to add the ennemy on our world
+- On the 2D scene we can press alt and then moove the ennemy so it dont start on our player
+- Create a collisionShape2D, at the right change the shape to capsuleshape
+
+### 3.1. Movement :
+
+It will define how our player move (go to the code to see more details)
+
+```GdScript
+@export var movemement_speed = 20.0
+
+@onready var player = get_tree().get_first_node_in_group("player")
+
+func _physics_process(_delta):
+	var direction = global_position.direction_to(player.global_position)
+	velocity = direction*movemement_speed
+	move_and_slide
+```
+		
+
+
 ## 3 General Settings : 
 	
 - General/Display/Window : 
@@ -60,6 +95,8 @@ func _physics_process(delta):
 - Input Map/New Action :
 	- Add up, down, left and right event
 	- On this events, set our keybinds associated to those (match the key /!\ latin or physical keycode depends on which type of keyboard)
+
+- At the top of godot interface you can switch to script or 2D visualization
 
 
 If you want the basics texture (go to the ref)
