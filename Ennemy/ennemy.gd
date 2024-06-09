@@ -2,6 +2,7 @@ extends CharacterBody2D
 
 #So we can change the value of the variable directly from the right pannel on ennemy
 @export var movemement_speed = 20.0
+@export var health = 20
 
 #@On ready var gets a value after the nodes are loaded we use onready var to reference nodes
 #Here we take the first node of group player previously created
@@ -22,3 +23,8 @@ func _physics_process(_delta):
 		sprite2DKobold.flip_h = true
 	elif direction.x < 0.1:
 		sprite2DKobold.flip_h = false
+
+func _on_hurt_box_hurt(damage):
+	health -= damage
+	if health <= 0:
+		queue_free() #Here we delete the ennemy if his hp = 0

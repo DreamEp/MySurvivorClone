@@ -1,8 +1,9 @@
 extends CharacterBody2D
 
 var movement_speed: float = 40.0
+var health = 80
 @onready var sprite2Dplayer = $PlayerSprite2D #Ici on peut faire référence a notre sprite2D du personnage pour faire l'annimation
-@onready var walkTimer = get_node("%walkTimer")
+@onready var walkTimer = get_node("%walkTimer") #Ici on fait référence a notre walkTimer d'une manière différente, permet notamment d'être path sensitive
 
 #Fonction custom pour créer notre mouvement
 func movement():
@@ -33,3 +34,7 @@ func movement():
 #Run automatique toutes les 1/60 seconds | delta = une seconde/frame rate (permet de se déplacer aussi rapidement selon le frame rate)
 func _physics_process(delta):
 	movement()
+
+func _on_hurt_box_hurt(damage):
+	health -= damage
+	print("hp : " + str(health) + " | damage : " + str(damage))

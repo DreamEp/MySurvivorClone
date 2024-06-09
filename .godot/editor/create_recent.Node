@@ -1,7 +1,8 @@
-AnimationPlayer
+CollisionPolygon2D
 Timer
 CollisionShape2D
-CollisionPolygon2D
+Area2D
+AnimationPlayer
 Camera2D
 Sprite2D
 CharacterBody2D

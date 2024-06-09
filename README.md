@@ -14,7 +14,12 @@
 		- [4.2 Walking animation](#42-walking-animation)
 			- [4.2.1 For our player](#421-for-our-player)
 			- [4.2.2 For our kobold ennemy](#422-for-our-kobold-ennemy)
-	- [5 General Settings :](#5-general-settings-)
+	- [5. Hurt box and hit box :](#5-hurt-box-and-hit-box-)
+		- [5.1. HitBox :](#51-hitbox-)
+		- [5.2. HurtBox :](#52-hurtbox-)
+	- [5. General Settings :](#5-general-settings-)
+	- [6. Lessons :](#6-lessons-)
+	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
 
 
 
@@ -111,11 +116,6 @@ func _physics_process(_delta):
   	- At 0.3 of our animation we change the frame to 1
   	- At 0.6 then we reset it to frame 0
   	- Reference the animation on our code in a func function _ready() which is intern to Godot working since the start we reference our walk animation
-- There is 4 ways to refer our nodes:
-  - Directly refer it with his name using $name / if we change the name or path we have to change in each area..
-  - Using @onready variable and the reference $ / if we change the name or path we have to change it in one area.
-  - Using @onready variable with access unique name (get_node("%name")) / long to setup but if we change the path there is nothing to change in our code but it has to be an unique name
-  - Using a function to fetch the node get_tree().get_first_node_in_group("sprite_in_group") / powerfull if we don't know the exact name of the node but it long to setup.
 
 ### 4.1 Facing right direction 
 
@@ -182,7 +182,76 @@ func _ready():
 	walkAnimationPlayer.play("walk")
 ```
 
-## 5 General Settings : 
+## 5. Hurt box and hit box : 
+
+Hit box is the aggressive one, since we hit someone vs hurtbox we are hurting meens we took damage and not dealing them.
+- We can had a health variable in both of our ennemy and player
+- We create a new scene Area2D, this can detect collision but don't apply physics on it = Hitbox
+- We create on this a node CollisionShape2D = Hitbox
+- We add a timer on it too (set it to 0.5 and oneshot)
+- We save all of this on a new folder called Utility
+- Add a new script
+- Do the same for the HurtBox
+- In hurtbox we create a signal (built-in function) from the Area2D called area_entered
+- In hitbox we create a group named attack
+- We create a new signal named timeout for our timer in hurtbox/hitbox, this will be triggered when our timer is ended, in our case after 0.5 seconds
+- We remove the layer/mask in our parent hitbox/hurtbox (in collision)
+- We add those hurtbox and hitbox to our ennemy by dragging .tscn script  to our player and ennemy scene
+  - We rightclick on hurtbox/hitbox imported and rightclick to editable children
+  - For our collisiong shape we add a rectangle shape for hurtbox, same for hitbox instead it will be smaller and realy on top of the ennemy
+  - We add the hurtbox to ennemy layer/mask
+  - We add the hitbox to player layer/mask
+- We add a hurtbox on our player aswell 
+  - Set it collision to player
+  - We connect the hurt signal (previously created) on player hurtbox 
+
+### 5.1. HitBox :
+
+It will define the hitbox of our player/ennemy by adding it to the scene of player or ennemy - the hitbox is to deal damage so it's agressive one
+
+```GdScript
+@export var damage = 1
+@onready var collision = $CollisionShape2D
+@onready var disableTimer = $DisableHitBoxTimer
+
+func tempdisable():
+	collision.call_deferred("set", "disabled", true)
+	disableTimer.start()
+
+func _on_disable_hit_box_timer_timeout():
+	collision.call_deferred("set", "disabled", false)
+```
+
+### 5.2. HurtBox :
+
+It will define the hurtbox of our player/ennemy by adding it to the scene of player or ennemy - the hurtbox is to received the damage
+
+```GdScript
+@onready var collision = $CollisionShape2D
+@onready var disableTimer = $DisableTimer
+
+signal hurt(damage) 
+
+func _on_area_entered(area):
+	if area.is_in_group("attack"):
+		if not area.get("damage") == null: 
+			match HurtBoxType:
+				0: #Cooldown
+					collision.call_deferred("set", "disabled", true) 
+					disableTimer.start() 
+				1: #HitOnce
+					pass
+				2: #DisableHitBox
+					if area.has_method("tempdisable"): 
+						area.tempdisable()
+			var damage = area.damage
+			emit_signal("hurt", damage) 
+
+func _on_disable_timer_timeout():
+	collision.call_deferred("set", "disabled", false)
+```
+
+## 5. General Settings : 
 	
 - General/Display/Window : 
 	- Set viewport (640x360) max (1280x720)
@@ -192,7 +261,28 @@ func _ready():
 	- Add up, down, left and right event
 	- On this events, set our keybinds associated to those (match the key /!\ latin or physical keycode depends on which type of keyboard)
 
+- General/Layer/2DLayer - Physics :
+	- Layer1 = World
+	- Layer2 = Player
+	- Layer3 = Enemy
+	- Layer4 = Loot
 - At the top of godot interface you can switch to script or 2D visualization
+- To add a signal/or a group we go to the node pannel at right
+
+## 6. Lessons : 
+	
+- Refer a node, 4 ways :
+  - Directly refer it with his name using $name / if we change the name or path we have to change in each area..
+  - Using @onready variable and the reference $ / if we change the name or path we have to change it in one area.
+  - Using @onready variable with access unique name (get_node("%name")) / long to setup but if we change the path there is nothing to change in our code but it has to be an unique name
+  - Using a function to fetch the node get_tree().get_first_node_in_group("sprite_in_group") / powerfull if we don't know the exact name of the node but it long to setup.
+- The Layer and Mask :
+  - Layer tell us "I exist on" the following layer(s)
+  - Mask tell us "I will collide with items that exist on the following layers"
+
+## 7. Review/Missunderstanding : 
+	
+- position vs global position
 
 
 If you want the basics texture (go to the ref)

@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://7bnnalbja1l" path="res://Textures/dirt_full_new.png" id="1_cqh15"]
 [ext_resource type="PackedScene" uid="uid://165n5brcy33j" path="res://Player/player.tscn" id="2_vhhdp"]
-[ext_resource type="PackedScene" uid="uid://dcj6q2hy4sgsy" path="res://Ennemy/ennemy_character_body_2d.tscn" id="3_oaxgs"]
+[ext_resource type="PackedScene" uid="uid://dcj6q2hy4sgsy" path="res://Ennemy/ennemy_kobold_character_body_2d.tscn" id="3_oaxgs"]
 
 [node name="World" type="Node2D"]
 position = Vector2(1, 2)
