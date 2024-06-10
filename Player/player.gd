@@ -32,7 +32,7 @@ func movement():
 	
 #Function nécéssaire pour que Godot interprete la physique du personnage
 #Run automatique toutes les 1/60 seconds | delta = une seconde/frame rate (permet de se déplacer aussi rapidement selon le frame rate)
-func _physics_process(delta):
+func _physics_process(_delta):
 	movement()
 
 func _on_hurt_box_hurt(damage):

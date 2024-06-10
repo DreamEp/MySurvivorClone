@@ -17,6 +17,9 @@
 	- [5. Hurt box and hit box :](#5-hurt-box-and-hit-box-)
 		- [5.1. HitBox :](#51-hitbox-)
 		- [5.2. HurtBox :](#52-hurtbox-)
+	- [6. Create an ennemy spawner :](#6-create-an-ennemy-spawner-)
+		- [6.1. Create a resource/class Spawn\_info :](#61-create-a-resourceclass-spawn_info-)
+		- [6.2. Create an ennemy spawner :](#62-create-an-ennemy-spawner-)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -249,6 +252,98 @@ func _on_area_entered(area):
 
 func _on_disable_timer_timeout():
 	collision.call_deferred("set", "disabled", false)
+```
+
+## 6. Create an ennemy spawner : 
+
+We don't need anymore our child node ennemy to be related to our world.
+
+- Create a 2Dscene node EnemySpawner
+- Add a timer
+- Save this under utility
+- Create a script related to our new scene
+- Create a new script under utility named spawn_info, double click and add extends Resource to it.
+- Go to section 6.1 to generate the code for our spawn_info script
+- In our EnemySpawner node we are now able to increase size of Spawns and add a spawn_info related to it
+  - We can set now the time range for our ennemy to spawn
+  - The type of ennemy by dragging the kobold.tscn file to ennemy
+- Connect the timer to our ennemy spawner by adding a timeout signal
+- Create the relative code to ennemy_spawner in 6.2
+- Drag and drop the EnnemySpawner node (.tscn) in our world
+
+### 6.1. Create a resource/class Spawn_info :
+
+It will define the class spawn_info and the attribute related to it
+
+```GdScript
+extends Resource
+
+class_name Spawn_info
+
+@export var time_start: int
+@export var time_end: int
+@export var ennemy: Resource
+@export var enemy_num: int
+@export var enemy_spawn_delay: int
+
+var spawn_delay_counter = 0
+```
+
+### 6.2. Create an ennemy spawner :
+
+Create the logic about ennemy spawner and the spawn location
+
+```GdScript
+@export var spawns : Array[Spawn_info] = []
+@onready var player = get_tree().get_first_node_in_group("player")
+var time = 0
+
+func _on_timer_timeout():
+	time += 1
+	var ennemy_spawns = spawns
+	for i in ennemy_spawns:
+		if time >= i.time_start and time <= i.time_end:
+			if i.spawn_delay_counter <= i.enemy_spawn_delay: 
+				i.spawn_delay_counter += 1
+			else:
+				i.spawn_delay_counter = 0 
+				var new_ennemy = load(str(i.ennemy.resource_path))
+				var counter = 0
+				while counter < i.enemy_num: 
+					var ennemy_spawn = new_ennemy.instantiate() 
+					ennemy_spawn.global_position = get_random_position() 
+					add_child(ennemy_spawn)
+					counter += 1 
+
+func get_random_position():
+	var vpr = get_viewport_rect().size * randf_range(1.1, 1.4) 
+	var top_left = Vector2(player.global_position.x - vpr.x/2, player.global_position.y - vpr.y/2)
+	var top_right = Vector2(player.global_position.x + vpr.x/2, player.global_position.y - vpr.y/2)
+	var bottom_left = Vector2(player.global_position.x - vpr.x/2, player.global_position.y + vpr.y/2)
+	var bottom_right = Vector2(player.global_position.x + vpr.x/2, player.global_position.y + vpr.y/2)
+	
+	var pos_side = ["up", "down", "right", "left"].pick_random() 
+	var spawn_pos1 = Vector2.ZERO
+	var spawn_pos2 = Vector2.ZERO
+	
+	match pos_side:
+		"up":
+			spawn_pos1 = top_left
+			spawn_pos2 = top_right
+		"down":
+			spawn_pos1 = bottom_left
+			spawn_pos2 = bottom_right
+		"right":
+			spawn_pos1 = top_right
+			spawn_pos2 = bottom_right
+		"left":
+			spawn_pos1 = top_left
+			spawn_pos2 = bottom_left
+	
+	var x_spawn = randf_range(spawn_pos1.x, spawn_pos2.x)
+	var y_spawn = randf_range(spawn_pos1.y, spawn_pos2.y)
+	
+	return Vector2(x_spawn, y_spawn)
 ```
 
 ## 5. General Settings : 
