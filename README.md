@@ -20,6 +20,9 @@
 	- [6. Create an ennemy spawner :](#6-create-an-ennemy-spawner-)
 		- [6.1. Create a resource/class Spawn\_info :](#61-create-a-resourceclass-spawn_info-)
 		- [6.2. Create an ennemy spawner :](#62-create-an-ennemy-spawner-)
+	- [7. Create an ice spear attack :](#7-create-an-ice-spear-attack-)
+		- [7.1. Create the ice spear :](#71-create-the-ice-spear-)
+		- [7.2. Add our IceSpear attack logic to our player script :](#72-add-our-icespear-attack-logic-to-our-player-script-)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -345,6 +348,141 @@ func get_random_position():
 	
 	return Vector2(x_spawn, y_spawn)
 ```
+## 7. Create an ice spear attack : 
+
+We don't need anymore our child node ennemy to be related to our world.
+
+- Create a 2Dscene node Area2D, make the visibility on top-level
+- Save it to a new folder named Attacks
+- Add a CollisionShape to it 
+- Add a Sprite2D to it, drag the icespear png to it then shape it
+- Add the Area2D collision layer to ennemy since it's an hitbox and will hit the ennemy
+- Add it to attack group
+- Add timer node (that will set the time the ice_spear existing in case it miss) :  
+  - Set One Shot and Autostart to On
+  - Set timer to 10sec
+- Add a script to our new scene (7.1)
+- Add audio_stream_player node:
+  - add the sound to it
+  - auto play 
+  - pitch is the time the sound to play
+- Create a Node2D to our player named Attacks
+  - Add to this a timer named IceSpearTimer 1.5s, access as unique node
+    - Add to this a timer named IceAttackSpearTimer 0.075s, access as unique node
+- In player script add new code (7.2) and timeouts functions
+- Create a new node Area 2D to our player named EnemyDetectionArea
+  - Make it only Monitoring and not Monitorable
+  - Collision has to be set for our ennemy (mask/ layer?)
+  - Add signals body_entered and body_exited
+  - Create a new node CollisionShape
+    - Add a big circle shape to it to wrap the whole camera rectangle
+- Since we are doing body entered instead of area entered, we have to add our Ennemy to layer 3 for detection since we are looking to ennemy layer
+
+### 7.1. Create the ice spear :
+
+It will define how the ice spear works and the variables attached to it
+
+```GdScript
+extends Area2D
+
+var level = 1
+var health = 1
+var speed = 100
+var damage = 5
+var knock_amount = 100
+var attack_area = 1.0
+
+var target = Vector2.ZERO
+var angle = Vector2.ZERO
+
+@onready var player = get_tree().get_first_node_in_group("player")
+
+func _ready():
+	angle = global_position.direction_to(target)
+	rotation = angle.angle() + deg_to_rad(135)
+	match level:
+		1:
+			var health = 1
+			var speed = 100
+			var damage = 5
+			var knock_amount = 100
+			var attack_area = 1.0
+
+func _physics_process(delta):
+	position += angle * speed * delta
+	
+func enemy_hit(charge = 1):
+	health -= charge
+	if health <= 0:
+		queue_free()
+		
+func _on_timer_timeout():
+	queue_free()
+```
+
+### 7.2. Add our IceSpear attack logic to our player script :
+
+Create the logic about ennemy spawner and the spawn location
+
+```GdScript
+""
+#Attacks
+var iceSpear = preload("res://Player/Attacks/ice_spear_area_2d.tscn")
+
+#AttacksNodes
+@onready var iceSpearTimer = get_node("%IceSpearTimer")
+@onready var iceSpearAttackTimer = get_node("%IceSpearAttackTimer")
+
+#IceSpear
+var icespear_ammo = 0
+var icespear_baseammo = 1
+var icespear_attackspeed = 1.5
+var icespear_level = 1
+
+#Ennemy related
+var enemy_close = []
+
+func _ready():
+	attack()
+
+func attack():
+	if icespear_level > 0:
+		iceSpearTimer.wait_time = iceSpearAttackTimer
+		if iceSpearTimer.is_stopped():
+			iceSpearTimer.start()
+
+func _on_ice_spear_timer_timeout():
+	icespear_ammo += icespear_baseammo
+	iceSpearAttackTimer.start()
+
+func _on_ice_spear_attack_timer_timeout():
+	if icespear_ammo > 0:
+		var icespear_attacks = iceSpear.instantiate()
+		icespear_attacks.position = position
+		icespear_attacks.target = get_random_target()
+		icespear_attacks.level = icespear_level
+		add_child(icespear_attacks)
+		icespear_ammo -= 0
+		if icespear_ammo > 0:
+			iceSpearAttackTimer.start()
+		else:
+			iceSpearAttackTimer.stop()
+
+func get_random_target():
+	if enemy_close.size() > 0: 
+		return enemy_close.pick_random().global_position
+	else: 
+		return Vector2.UP
+
+func _on_enemy_detection_area_area_2d_body_entered(body):
+	if not enemy_close.has(body):
+		enemy_close.append(body)
+
+func _on_enemy_detection_area_area_2d_body_exited(body):
+	if enemy_close.has(body):
+		enemy_close.erase(body)
+""
+```
 
 ## 5. General Settings : 
 	
@@ -365,7 +503,7 @@ func get_random_position():
 - To add a signal/or a group we go to the node pannel at right
 
 ## 6. Lessons : 
-	
+
 - Refer a node, 4 ways :
   - Directly refer it with his name using $name / if we change the name or path we have to change in each area..
   - Using @onready variable and the reference $ / if we change the name or path we have to change it in one area.
@@ -374,13 +512,17 @@ func get_random_position():
 - The Layer and Mask :
   - Layer tell us "I exist on" the following layer(s)
   - Mask tell us "I will collide with items that exist on the following layers"
+- Tween :
+  - Thanks to tween we can change a property of a given node given a duration to accomplish this, giving the tween.tween_property(node, property, end_result, duration)
+  - We can run multiple tween for the same node, by default they wwill run one after the other but we can run them simultany by setting create_tween().set_parallel(true). We use then .chain() if we want an exception to run not in parallel
+  - The _trans define how the tween will comport itself during the duration [(here)](https://preview.redd.it/zdzhci8octp41.png?auto=webp&s=e26a297d816b53482ca2d0199ba71761fe54c3c7) for a good comportement visualization. By default SINE < CUBIC < QUINT
 
 ## 7. Review/Missunderstanding : 
 	
 - position vs global position
+- Instead of using a timer to make the ice spear remove itself you can instead use a VisibleOnScreenNotifier2D node to detect when the projectile is no longer on screen and then queue_free()
 
 
-If you want the basics texture (go to the ref)
-		
-Ref : https://github.com/brannotaylor/SurvivorsClone_Base
+If you want the basics texture go to the [REF](https://github.com/brannotaylor/SurvivorsClone_Base)	
 
+Go there for a [memo](https://preview.redd.it/4ctcttlrewtc1.png?auto=webp&s=65ac04e7c69e025db393b1c7ee770f7743c51f77)

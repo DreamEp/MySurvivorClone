@@ -14,7 +14,7 @@ func _on_timer_timeout():
 				i.spawn_delay_counter += 1
 			else:
 				i.spawn_delay_counter = 0 #Sinon on reset le délai de spawn
-				var new_ennemy = load(str(i.ennemy.resource_path)) #On récupère le nouvel ennemi en récupérant le path de la variable ennemi dans les spawn_info de celui-ci
+				var new_ennemy = i.ennemy #On récupère le nouvel ennemi en récupérant le path de la variable ennemi dans les spawn_info de celui-ci
 				var counter = 0
 				while counter < i.enemy_num: #Tant qu'on a pas le nombre d'ennemi qu'on veut
 					var ennemy_spawn = new_ennemy.instantiate() #On fait instancie des spawns d'ennemis jusqu'a avoir le nombre voulu
@@ -24,7 +24,7 @@ func _on_timer_timeout():
 
 #Création d'une fonction custom pour set une random position pour nos ennemies
 func get_random_position():
-	var vpr = get_viewport_rect().size * randf_range(1.1, 1.4) #vpr = ViewPort Rect, on ne veut pas récupérer les côté du screen mais un peu de marge
+	var vpr = get_viewport_rect().size * randf_range(1.1, 1.4) #vpr = ViewPort Rect, on ne veut pas récupérer les côté du screen (pov) mais un peu de marge
 	var top_left = Vector2(player.global_position.x - vpr.x/2, player.global_position.y - vpr.y/2)
 	var top_right = Vector2(player.global_position.x + vpr.x/2, player.global_position.y - vpr.y/2)
 	var bottom_left = Vector2(player.global_position.x - vpr.x/2, player.global_position.y + vpr.y/2)

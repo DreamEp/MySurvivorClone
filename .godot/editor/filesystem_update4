@@ -1,10 +1,12 @@
-res://Utility/enemy_spawner.tscn
-res://Utility/enemy_spawner.gd
-res://Utility/spawn_info.gd
 res://World/world.tscn
 res://Player/player.tscn
 res://Ennemy/ennemy_kobold_character_body_2d.tscn
 res://Utility/hit_box.tscn
 res://Utility/hurt_box.tscn
-res://Player/player.gd
+res://Utility/enemy_spawner.tscn
 res://Ennemy/ennemy.gd
+res://Utility/enemy_spawner.gd
+res://Player/Attacks/ice_spear_area_2d.tscn
+res://Player/Attacks/ice_spear_area_2d.gd
+res://Player/player.gd
+res://Utility/hurt_box.gd

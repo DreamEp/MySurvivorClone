@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 #So we can change the value of the variable directly from the right pannel on ennemy
 @export var movemement_speed = 20.0
-@export var health = 20
+@export var health = 10
 
 #@On ready var gets a value after the nodes are loaded we use onready var to reference nodes
 #Here we take the first node of group player previously created

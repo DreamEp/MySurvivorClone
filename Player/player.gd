@@ -2,6 +2,27 @@ extends CharacterBody2D
 
 var movement_speed: float = 40.0
 var health = 80
+var attack_speed = 0.1
+
+#Attacks
+var iceSpear = preload("res://Player/Attacks/ice_spear_area_2d.tscn")
+
+#AttacksNodes
+@onready var iceSpearTimer = get_node("%IceSpearTimer")
+@onready var iceSpearAttackTimer = get_node("%IceSpearAttackTimer")
+
+#IceSpear
+var icespear_ammo = 0
+var icespear_baseammo = 2
+var icespear_reloadspeed = 3
+var icespear_level = 1
+
+#Ennemy related
+var enemy_close = []
+
+func _ready():
+	attack()
+
 @onready var sprite2Dplayer = $PlayerSprite2D #Ici on peut faire référence a notre sprite2D du personnage pour faire l'annimation
 @onready var walkTimer = get_node("%walkTimer") #Ici on fait référence a notre walkTimer d'une manière différente, permet notamment d'être path sensitive
 
@@ -30,6 +51,12 @@ func movement():
 	velocity = move.normalized()*movement_speed #Définit la physique du mouvement, la vitesse etc | Normalized permet de se déplacer de la meme vitesse en diagonale sinon on serait plus rapide
 	move_and_slide() #Interprete le tout pour bouger | utilise delta par défaut
 	
+func attack():
+	if icespear_level > 0:
+		iceSpearTimer.wait_time = icespear_reloadspeed
+		if iceSpearTimer.is_stopped():
+			iceSpearTimer.start()
+			
 #Function nécéssaire pour que Godot interprete la physique du personnage
 #Run automatique toutes les 1/60 seconds | delta = une seconde/frame rate (permet de se déplacer aussi rapidement selon le frame rate)
 func _physics_process(_delta):
@@ -38,3 +65,38 @@ func _physics_process(_delta):
 func _on_hurt_box_hurt(damage):
 	health -= damage
 	print("hp : " + str(health) + " | damage : " + str(damage))
+
+#Chargement des munitions
+func _on_ice_spear_timer_timeout():
+	icespear_ammo += icespear_baseammo
+	iceSpearAttackTimer.start()
+
+#Timer entre chaques tir
+func _on_ice_spear_attack_timer_timeout():
+	if icespear_ammo > 0:
+		var icespear_attack = iceSpear.instantiate()
+		icespear_attack.position = position #On utilise la position relative au parent car on shoot directement depuis le joueur pas besoins de global pos
+		icespear_attack.target = get_random_target()
+		icespear_attack.level = icespear_level
+		add_child(icespear_attack)
+		iceSpearAttackTimer.wait_time = icespear_attack.attack_speed * (1-attack_speed)
+		print("After adding child | player attack_speed %s, icespear base attack_speed %s, final attack speed for that attack %s" % [attack_speed, icespear_attack.attack_speed, iceSpearAttackTimer.wait_time])
+		icespear_ammo -= 1 #On enlève une munition
+		if icespear_ammo > 0:
+			iceSpearAttackTimer.start()
+		else:
+			iceSpearAttackTimer.stop()
+		
+func get_random_target():
+	if enemy_close.size() > 0: #Si on a au moins un ennemi proche
+		return enemy_close.pick_random().global_position #On retourne la position global d'un ennemi random sur lequel tiré
+	else: 
+		return Vector2.UP
+
+func _on_enemy_detection_area_area_2d_body_entered(body):
+	if not enemy_close.has(body):
+		enemy_close.append(body) #On ajoute l'ennemi dans la liste a atteindre
+
+func _on_enemy_detection_area_area_2d_body_exited(body):
+	if enemy_close.has(body):
+		enemy_close.erase(body) #On supprime le body de la liste quand il est présent dans la liste et s'en va de la close area
