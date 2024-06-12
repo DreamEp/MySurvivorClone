@@ -21,19 +21,19 @@ func _ready():
 	rotation = angle.angle() + deg_to_rad(135) #On set la property rotation de l'ice spear en transforamnt les degré en radiant, par défaut l'ice spear est en -45 donc (-45+135 = 90 = icespear a l'horizontal Vector(1,0))
 	match level:
 		1:
-			pierce = 2
-			attack_speed = 1
-			bullet_speed = 100
-			damage = 5
-			knockback_amount = 100
-			attack_area = 1.0
+			pierce = pierce
+			attack_speed = attack_speed
+			bullet_speed = bullet_speed
+			damage = damage
+			knockback_amount = knockback_amount
+			attack_area = attack_area
 		2:
-			pierce = 1
-			attack_speed = 0.7
-			bullet_speed = 100
-			damage = 6
-			knockback_amount = 100
-			attack_area = 1.0
+			pierce += 1
+			attack_speed = attack_speed
+			bullet_speed = bullet_speed
+			damage += 1
+			knockback_amount = knockback_amount
+			attack_area = attack_area
 	#Permet de créer un effet sur le projectile ici		
 	var tween = create_tween()
 	#On change la valeur scale du node parent en multipliant un vecteur 1,1 par l'area du projectile est en disant que celui ci grossis en 3 sec, avec un effet ease_out

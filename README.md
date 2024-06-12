@@ -32,7 +32,7 @@
 		- [9.1. Create the tornado script :](#91-create-the-tornado-script-)
 		- [9.2. Add our Tornado attack logic to our player script :](#92-add-our-tornado-attack-logic-to-our-player-script-)
 	- [10. Create a Javelo/Summon/Hitbox:](#10-create-a-javelosummonhitbox)
-		- [10.1. Create the tornado script :](#101-create-the-tornado-script-)
+		- [10.1. Create the Javellin script :](#101-create-the-javellin-script-)
 		- [10.2. Add our Tornado attack logic to our player script :](#102-add-our-tornado-attack-logic-to-our-player-script-)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
@@ -760,115 +760,173 @@ func _on_tornado_attack_timer_timeout():
 
 ## 10. Create a Javelo/Summon/Hitbox: 
 
-We are just creating a new spell / hitbox
+We are just creating a new summon / hitbox
 
 - Create a 2Dscene node Area2D, make the visibility on top-level
 - Save it to folder named Attacks
 - Add a CollisionShape to it 
-- Add a Sprite2D to it, drag the tornado png to it then shape it
-- Add the Area2D collision layer to enemy since it's an hitbox and will hit the enemy
+- Add a Sprite2D to it, drag the javellin png to it then shape it
+- Add the Area2D collision layer to enemy since it's an hitbox and will hit the enemy, then disabled it by default
 - Add it to attack group
-- Add timer node (that will set the time the tonado existing in case it miss) :  
-  - Set Autostart to On
-  - Set timer to 20sec
-  - Create the timeout signal
-- Add a script to our new scene (9.1)
-- In player script add new code (9.2)
+- Add 3 timer node () :  
+  - Reset to initial position
+  - Attack delay
+  - Salve delay
+- Add a script to our new scene (10.1)
+- In player script add new code (10.2)
+  - Create a new node under AttackNode that will be javelinNode
   - We will now retrieve the last movement we did
 - Add audio_stream_player node:
   - add the sound to it
   - auto play 
   - pitch is the time the sound to play
-- To our node2D Attacks:
-    - Add to this a timer named TornadoAttackTimer 0.2s, access as unique node
-- The main change there is we're playing the attack not directly to a target but to where we face last timed
-- The goald is to achieve an attack wich change angle during his life, here we are going in a cone to the faced direction
 
-### 10.1. Create the tornado script :
+### 10.1. Create the Javellin script :
 
-It will define how the tornado attack / hitbox works and the variables attached to it
+It will define how the javellin summon / hitbox works and the variables attached to it
 
 ```GdScript
 extends Area2D
 
 var level = 1
-var pierce = 999
-var cast_speed = 0.7
-var base_bullet_speed = 20
-var final_bullet_speed = 80
-var damage = 2
+var pierce = 9999
+var bullet_speed = 200.0
+var base_return_speed = 20
+var long_return_speed = 100
+var damage = 5
+var knockback_amount = 100
+var max_ennemy_numbers_paths = 3 
 var attack_area = 1.0
+var salve_attack_delay = 7.0
+var next_attack_delay = 3.0
+var spawn_delay = 30
 
-var tween_change_direction_time =  3
-var tween_change_size_time = 3
-var tween_change_bulletspeed_time = 7
-
-var last_movement = Vector2.ZERO
-var angle = Vector2.ZERO
-var angle_less = Vector2.ZERO
-var angle_more = Vector2.ZERO
 var target = Vector2.ZERO
+var target_array = []
+
+var angle = Vector2.ZERO
+var reset_pos = Vector2.ZERO
+
+var spr_jav_reg = preload("res://Textures/Items/Weapons/javelin_3_new.png")
+var spr_jav_attacking = preload("res://Textures/Items/Weapons/javelin_3_new_attack.png")
+
+@onready var player = get_tree().get_first_node_in_group("player")
+@onready var sprite = $Sprite2D
+@onready var collision = $CollisionShape2D
+@onready var attackTimer = get_node("%AttackTimer")
+@onready var changeDirectionTimer = get_node("%ChangeDirection")
+@onready var resetPosTimer = get_node ("%ResetPosTimer")
+@onready var snd_attack = $snd_javelin_attack
 
 signal remove_from_array(object)
 
-@onready var player = get_tree().get_first_node_in_group("player")
-
+#Ici on instancie le javelot
 func _ready():
+	update_javelin()
+	_on_reset_pos_timer_timeout()
+
+func update_javelin():
+	level = player.javelin_level
 	match level:
 		1:
-			pierce = 999
-			cast_speed = 2
-			base_bullet_speed = 20
-			final_bullet_speed = base_bullet_speed * 5
-			damage = 2
-			attack_area = 1.2
+			pierce = pierce
+			bullet_speed = bullet_speed
+			damage = damage
+			knockback_amount = knockback_amount
+			max_ennemy_numbers_paths = max_ennemy_numbers_paths
+			attack_area = attack_area
+			salve_attack_delay = salve_attack_delay
+			next_attack_delay = next_attack_delay
+			spawn_delay = spawn_delay
 		2:
-			pierce = 999 
-			cast_speed = 2
-			base_bullet_speed = 50
-			final_bullet_speed = base_bullet_speed * 3
-			damage = 2
-			attack_area = 1.4
-	var move_to_less = Vector2.ZERO
-	var move_to_more = Vector2.ZERO
-	match last_movement: 
-		Vector2.UP, Vector2.DOWN: 
-			move_to_less = global_position + Vector2(randf_range(-1, -0.25), last_movement.y) * 500 
-			move_to_more = global_position + Vector2(randf_range(0.25, 1), last_movement.y) * 500 
-		Vector2.RIGHT, Vector2.LEFT: 
-			move_to_less = global_position + Vector2(last_movement.x, randf_range(-1, -0.25)) * 500 
-			move_to_more = global_position + Vector2(last_movement.x, randf_range(0.25, 1)) * 500 
-		Vector2(1,-1), Vector2(1,1), Vector2(-1,1), Vector2(-1,-1):
-			move_to_less = global_position + Vector2(last_movement.x, last_movement.y * randf_range(0,0.75)) * 500
-			move_to_more = global_position + Vector2(last_movement.x * randf_range(0,0.75), last_movement.y) * 500
-	angle_less = global_position.direction_to(move_to_less)
-	angle_more = global_position.direction_to(move_to_more) 
+			pierce = pierce
+			bullet_speed = bullet_speed
+			damage = damage
+			knockback_amount = knockback_amount
+			max_ennemy_numbers_paths += 1
+			attack_area = attack_area
+			salve_attack_delay = salve_attack_delay	
+			next_attack_delay = next_attack_delay	
+			spawn_delay = spawn_delay
 	
-	var initial_tween = create_tween().set_parallel(true)
-	initial_tween.tween_property(self, "scale", Vector2(1,1) * attack_area, tween_change_size_time).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) 
-	initial_tween.tween_property(self, "base_bullet_speed", final_bullet_speed, tween_change_bulletspeed_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT) 
-	initial_tween.play()
-	
-	var tween = create_tween() 
-	var set_angle = randi_range(0, 1) 
-	if set_angle == 1:
-		angle = angle_less
-		tween.tween_property(self, "angle", angle_more, tween_change_direction_time)
-		tween.tween_property(self, "angle", angle_less, tween_change_direction_time)
-	else :
-		angle = angle_more
-		tween.tween_property(self, "angle", angle_less, tween_change_direction_time)
-		tween.tween_property(self, "angle", angle_more, tween_change_direction_time)
-	tween.set_loops()
+	var tween = create_tween()
+	tween.tween_property(self, "scale", Vector2(1, 1) * attack_area, 3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.play()
+	attackTimer.wait_time = salve_attack_delay
+	changeDirectionTimer.wait_time = next_attack_delay
 
 func _physics_process(delta):
-	position += angle * base_bullet_speed * delta
+	if target_array.size() > 0: 	
+		position += angle * bullet_speed * delta
+	else: #Sinon on le fait revenir doucement vers le joueur
+		var player_angle = global_position.direction_to(reset_pos) 
+		var distance_dif = global_position - player.global_position 
+		var return_speed = base_return_speed 
+		if abs(distance_dif.x) > 500 or abs(distance_dif.y) > 500: 
+			return_speed = long_return_speed 
+		position += player_angle * return_speed * delta 
+		rotation = global_position.direction_to(player.global_position).angle() + deg_to_rad(135) 
 
-func _on_timer_timeout():
-	emit_signal("remove_from_array", self)
-	queue_free()
-	
+func add_ennemy_numbers_paths():
+	snd_attack.play()
+	emit_signal("remove_from_array", self) 
+	target_array.clear()
+	var counter = 0
+	while counter < max_ennemy_numbers_paths: 
+		var new_path = player.get_random_target() 
+		target_array.append(new_path) 
+	enable_attack(true) 
+	target = target_array[0]
+	process_path()
+
+func process_path():
+	angle = global_position.direction_to(target) 
+	changeDirectionTimer.start() 
+	var tween = create_tween()
+	var new_rotation_degrees = angle.angle() + deg_to_rad(135) 
+	tween.tween_property(self, "rotation", new_rotation_degrees, 0.25).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) 
+	tween.play()
+
+func enable_attack(atk = true):
+	if atk:
+		collision.call_deferred("set", "disabled", false)
+		sprite.texture = spr_jav_attacking
+	else:
+		collision.call_deferred("set", "disabled", true)
+		sprite.texture = spr_jav_reg
+
+func _on_attack_timer_timeout():
+	add_ennemy_numbers_paths()
+
+func _on_change_direction_timeout():
+	if target_array.size() > 0:
+		target_array.remove_at(0) 
+		if target_array.size() > 0: 
+			target = target_array[0] 
+			snd_attack.play()
+			emit_signal("remove_from_array", self) 
+		else:
+			changeDirectionTimer.stop() 
+			attackTimer.start() 
+			enable_attack(false) 
+	else:
+		changeDirectionTimer.stop() 
+		attackTimer.start() 
+		enable_attack(false) 
+
+func _on_reset_pos_timer_timeout():
+	var choose_direction = randi() % 4
+	reset_pos = player.global_position
+	match choose_direction:
+		0:
+			reset_pos.x += 50
+		1:
+			reset_pos.x -= 50
+		2:
+			reset_pos.y += 50
+		3:
+			reset_pos.y -= 50
+
 ```
 
 ### 10.2. Add our Tornado attack logic to our player script :
@@ -936,6 +994,7 @@ func _on_tornado_attack_timer_timeout():
 - Instead of using a timer to make the ice spear remove itself you can instead use a VisibleOnScreenNotifier2D node to detect when the projectile is no longer on screen and then queue_free()
 - Add the range
 - Retrieve the nearest enemy
+- Javelin freeze a little on retrieve real time position of player and mooving
 
 
 If you want the basics texture go to the [REF](https://github.com/brannotaylor/SurvivorsClone_Base)	

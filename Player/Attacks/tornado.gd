@@ -6,7 +6,7 @@ var cast_speed = 0.7
 var base_bullet_speed = 20
 var final_bullet_speed = 80
 var damage = 2
-var attack_area = 1.0
+var attack_area = 1.2
 
 var tween_change_direction_time =  3
 var tween_change_size_time = 3
@@ -25,19 +25,19 @@ signal remove_from_array(object)
 func _ready():
 	match level:
 		1:
-			pierce = 999
-			cast_speed = 2
-			base_bullet_speed = 20
-			final_bullet_speed = base_bullet_speed * 5
-			damage = 2
-			attack_area = 1.2
+			pierce = pierce
+			cast_speed = cast_speed
+			base_bullet_speed = base_bullet_speed
+			final_bullet_speed *= 3
+			damage = damage
+			attack_area = attack_area
 		2:
-			pierce = 999 
-			cast_speed = 2
-			base_bullet_speed = 50
-			final_bullet_speed = base_bullet_speed * 3
-			damage = 2
-			attack_area = 1.4
+			pierce = pierce 
+			cast_speed = cast_speed
+			base_bullet_speed *= base_bullet_speed
+			final_bullet_speed *= 4
+			damage += damage
+			attack_area += 0.2
 	var move_to_less = Vector2.ZERO
 	var move_to_more = Vector2.ZERO
 	match last_movement: #Match ici le dernier mouvement de notre joueur
@@ -57,7 +57,7 @@ func _ready():
 	angle_more = global_position.direction_to(move_to_more) 
 	
 	var initial_tween = create_tween().set_parallel(true)
-	initial_tween.tween_property(self, "scale", Vector2(1,1) * attack_area, tween_change_size_time).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) #Augmente la taille de la tornade
+	initial_tween.tween_property(self, "scale", Vector2(1,1) * attack_area, tween_change_size_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT) #Augmente la taille de la tornade
 	initial_tween.tween_property(self, "base_bullet_speed", final_bullet_speed, tween_change_bulletspeed_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT) #On fait la variation ici, elle atteint donc la max speed en 10 sec
 	initial_tween.play()
 	

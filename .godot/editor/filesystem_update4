@@ -9,3 +9,8 @@ res://Utility/enemy_spawner.tscn
 res://Player/Attacks/ice_spear_area_2d.tscn
 res://Ennemy/explosion.tscn
 res://Player/player.gd
+res://Player/Attacks/javellin.tscn
+res://Player/Attacks/javellin.gd
+res://Player/Attacks/javelin.tscn
+res://Player/Attacks/javelin.gd
+res://Player/Attacks/ice_spear_area_2d.gd

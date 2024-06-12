@@ -15,6 +15,8 @@ size = Vector2(12, 24)
 radius = 368.23
 
 [node name="Player_CharacterBody2D" type="CharacterBody2D" groups=["player"]]
+collision_layer = 0
+collision_mask = 4
 motion_mode = 1
 script = ExtResource("1_tmjtd")
 
@@ -59,6 +61,9 @@ wait_time = 0.25
 [node name="TornadoAttackTimer" type="Timer" parent="Attacks_Node2D"]
 unique_name_in_owner = true
 wait_time = 0.5
+
+[node name="JavelinBase" type="Node2D" parent="Attacks_Node2D"]
+unique_name_in_owner = true
 
 [node name="EnemyDetectionArea_Area2D" type="Area2D" parent="."]
 collision_layer = 4

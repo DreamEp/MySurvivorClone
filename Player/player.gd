@@ -10,21 +10,26 @@ var last_movement = Vector2.UP #Recupère notre précédent mouvement
 #Attacks
 var iceSpear = preload("res://Player/Attacks/ice_spear_area_2d.tscn")
 var tornado = preload("res://Player/Attacks/tornado.tscn")
+var javelin = preload("res://Player/Attacks/javelin.tscn")
 
 #AttacksNodes
 @onready var iceSpearTimer = get_node("%IceSpearReloadTimer") #reload
 @onready var iceSpearAttackTimer = get_node("%IceSpearAttackTimer") #attack speed
-#@onready var tornadoTimer = get_node("%TornadoTimer") 
 @onready var tornadoAttackTimer = get_node("%TornadoAttackTimer")
+@onready var javelinBase = get_node("%JavelinBase")
 
 #IceSpear
 var icespear_ammo = 0
 var icespear_baseammo = 2
 var icespear_reloadspeed = 3
-var icespear_level = 1
+var icespear_level = 0
 
 #Tornado
-var tornado_level = 1
+var tornado_level = 0
+
+#Javelin
+var javelin_max_spawns_limit = 1
+var javelin_level = 1
 
 #Ennemy related
 var enemy_close = []
@@ -69,7 +74,9 @@ func attack():
 	if tornado_level > 0:
 		if tornadoAttackTimer.is_stopped():
 			tornadoAttackTimer.start()
-			
+	if javelin_level > 0:
+		spawn_javelin()			
+				
 #Function nécéssaire pour que Godot interprete la physique du personnage
 #Run automatique toutes les 1/60 seconds | delta = une seconde/frame rate (permet de se déplacer aussi rapidement selon le frame rate)
 func _physics_process(_delta):
@@ -108,6 +115,17 @@ func _on_tornado_attack_timer_timeout():
 	tornadoAttackTimer.wait_time = tornado_attack.cast_speed * (1-cast_speed)
 	print("After adding child | player cast_speed %s, tornado base cast_speed %s, final attack speed for that attack %s" % [cast_speed, tornado_attack.cast_speed, tornadoAttackTimer.wait_time])
 	tornadoAttackTimer.start()
+
+#Ici on fait spawn un javelot
+func spawn_javelin():
+	var javelin_current_total = javelinBase.get_child_count() #On récupère le nombre de javelot déjà invoqué/spawné
+	var javelin_calc_spawns = javelin_max_spawns_limit - javelin_current_total #On calcule le nombre restant a invoquer selon la limite de spawn pour les javelots
+	while javelin_calc_spawns > 0: #Si elle est supérieur à 0
+		var javelin_spawn = javelin.instantiate() #Alors on instancie un javelot
+		javelin_spawn.global_position = global_position #On le set àà l'emplacement du joueur
+		javelinBase.add_child(javelin_spawn) #On l'ajoute concrètement a notre node
+		javelin_calc_spawns -= 1
+		await get_tree().create_timer(javelin_spawn.spawn_delay).timeout #On attends le timer de spawn avant d'en créer un nouveau
 		
 func get_random_target():
 	if enemy_close.size() > 0: #Si on a au moins un ennemi proche
