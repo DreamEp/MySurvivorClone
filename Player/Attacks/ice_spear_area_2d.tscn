@@ -20,7 +20,6 @@ texture = ExtResource("2_elu8e")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0.749999, -0.750001)
 rotation = -0.785398
-scale = Vector2(1, 1)
 shape = SubResource("RectangleShape2D_0wal0")
 
 [node name="Timer" type="Timer" parent="."]
@@ -30,7 +29,7 @@ autostart = true
 
 [node name="snd_play" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3_kpriy")
-volume_db = -3.0
+volume_db = -8.0
 pitch_scale = 4.0
 autoplay = true
 

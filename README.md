@@ -5,24 +5,29 @@
 	- [1. Initialisation - World](#1-initialisation---world)
 	- [2. Character](#2-character)
 		- [2.1. Movement :](#21-movement-)
-	- [3. Ennemy AI](#3-ennemy-ai)
+	- [3. enemy AI](#3-enemy-ai)
 		- [3.1. Movement :](#31-movement-)
 	- [4. Annimation](#4-annimation)
 		- [4.1 Facing right direction](#41-facing-right-direction)
 			- [4.1.1 For our player](#411-for-our-player)
-			- [4.1.2 For our kobold ennemy](#412-for-our-kobold-ennemy)
+			- [4.1.2 For our kobold enemy](#412-for-our-kobold-enemy)
 		- [4.2 Walking animation](#42-walking-animation)
 			- [4.2.1 For our player](#421-for-our-player)
-			- [4.2.2 For our kobold ennemy](#422-for-our-kobold-ennemy)
+			- [4.2.2 For our kobold enemy](#422-for-our-kobold-enemy)
 	- [5. Hurt box and hit box :](#5-hurt-box-and-hit-box-)
 		- [5.1. HitBox :](#51-hitbox-)
 		- [5.2. HurtBox :](#52-hurtbox-)
-	- [6. Create an ennemy spawner :](#6-create-an-ennemy-spawner-)
+	- [6. Create an enemy spawner :](#6-create-an-enemy-spawner-)
 		- [6.1. Create a resource/class Spawn\_info :](#61-create-a-resourceclass-spawn_info-)
-		- [6.2. Create an ennemy spawner :](#62-create-an-ennemy-spawner-)
+		- [6.2. Create an enemy spawner :](#62-create-an-enemy-spawner-)
 	- [7. Create an ice spear attack :](#7-create-an-ice-spear-attack-)
 		- [7.1. Create the ice spear :](#71-create-the-ice-spear-)
 		- [7.2. Add our IceSpear attack logic to our player script :](#72-add-our-icespear-attack-logic-to-our-player-script-)
+	- [8. Enemy Improvements :](#8-enemy-improvements-)
+		- [8.1. Update HurtBox script :](#81-update-hurtbox-script-)
+		- [8.2. Update the variable in our IceSpear script :](#82-update-the-variable-in-our-icespear-script-)
+		- [8.3. Update our Enemy script :](#83-update-our-enemy-script-)
+		- [8.4. Create our Explosion script :](#84-create-our-explosion-script-)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -74,17 +79,17 @@ func _physics_process(delta):
 	movement()	
 ```
 
-## 3. Ennemy AI
+## 3. enemy AI
 
-- Create a new scene (+ at top of godot interface), and add CharacterBody2D = our Ennemy
-- Save the player to a new folder of the project called Ennemy
+- Create a new scene (+ at top of godot interface), and add CharacterBody2D = our enemy
+- Save the player to a new folder of the project called enemy
 - Add a 2D Sprite to this node (Child node - it's a texture)
 In texture we drag our png 
 In animation we set the Hframes by number of copy (2 in our case)
 - Motion mode to floating (grounded for supermario where we can fall else floating)
 - 3.1
-- Drag the ennemy.tscn to the world scene to add the ennemy on our world
-- On the 2D scene we can press alt and then moove the ennemy so it dont start on our player
+- Drag the enemy.tscn to the world scene to add the enemy on our world
+- On the 2D scene we can press alt and then moove the enemy so it dont start on our player
 - Create a collisionShape2D, at the right change the shape to capsuleshape
 
 ### 3.1. Movement :
@@ -113,7 +118,7 @@ func _physics_process(_delta):
 - Right click on the walkTimer created and set "access as unique name"
 - Then work in the script to do the walking animation as intended
 - 
-- For the facing animation of our ennemy Kobold we do the same as our player instead we're setting a little gap in our if condition so it don't turn permanently
+- For the facing animation of our enemy Kobold we do the same as our player instead we're setting a little gap in our if condition so it don't turn permanently
 - For the walking animation of our Kobold we don't do the same, since we want it to run permanently and automaticaly. 
   	- So we create a new node animation
   	- We add an animation "walk" on the bottom panel 
@@ -141,9 +146,9 @@ func movement():
 		sprite2Dplayer.flip_h = false
 ""
 ```
-#### 4.1.2 For our kobold ennemy 
+#### 4.1.2 For our kobold enemy 
 
-We're working on the _physics_process function of our ennemy
+We're working on the _physics_process function of our enemy
 ```GdScript
 @onready var sprite2DKobold = $KoboldSprite2D
 
@@ -178,7 +183,7 @@ func movement():
 ""
 ```
 
-#### 4.2.2 For our kobold ennemy
+#### 4.2.2 For our kobold enemy
 
 We previously created an animation, time to refer it and use it in our code
 ```GdScript
@@ -191,7 +196,7 @@ func _ready():
 ## 5. Hurt box and hit box : 
 
 Hit box is the aggressive one, since we hit someone vs hurtbox we are hurting meens we took damage and not dealing them.
-- We can had a health variable in both of our ennemy and player
+- We can had a health variable in both of our enemy and player
 - We create a new scene Area2D, this can detect collision but don't apply physics on it = Hitbox
 - We create on this a node CollisionShape2D = Hitbox
 - We add a timer on it too (set it to 0.5 and oneshot)
@@ -202,10 +207,10 @@ Hit box is the aggressive one, since we hit someone vs hurtbox we are hurting me
 - In hitbox we create a group named attack
 - We create a new signal named timeout for our timer in hurtbox/hitbox, this will be triggered when our timer is ended, in our case after 0.5 seconds
 - We remove the layer/mask in our parent hitbox/hurtbox (in collision)
-- We add those hurtbox and hitbox to our ennemy by dragging .tscn script  to our player and ennemy scene
+- We add those hurtbox and hitbox to our enemy by dragging .tscn script  to our player and enemy scene
   - We rightclick on hurtbox/hitbox imported and rightclick to editable children
-  - For our collisiong shape we add a rectangle shape for hurtbox, same for hitbox instead it will be smaller and realy on top of the ennemy
-  - We add the hurtbox to ennemy layer/mask
+  - For our collisiong shape we add a rectangle shape for hurtbox, same for hitbox instead it will be smaller and realy on top of the enemy
+  - We add the hurtbox to enemy layer/mask
   - We add the hitbox to player layer/mask
 - We add a hurtbox on our player aswell 
   - Set it collision to player
@@ -213,7 +218,7 @@ Hit box is the aggressive one, since we hit someone vs hurtbox we are hurting me
 
 ### 5.1. HitBox :
 
-It will define the hitbox of our player/ennemy by adding it to the scene of player or ennemy - the hitbox is to deal damage so it's agressive one
+It will define the hitbox of our player/enemy by adding it to the scene of player or enemy - the hitbox is to deal damage so it's agressive one
 
 ```GdScript
 @export var damage = 1
@@ -230,7 +235,7 @@ func _on_disable_hit_box_timer_timeout():
 
 ### 5.2. HurtBox :
 
-It will define the hurtbox of our player/ennemy by adding it to the scene of player or ennemy - the hurtbox is to received the damage
+It will define the hurtbox of our player/enemy by adding it to the scene of player or enemy - the hurtbox is to received the damage
 
 ```GdScript
 @onready var collision = $CollisionShape2D
@@ -257,9 +262,9 @@ func _on_disable_timer_timeout():
 	collision.call_deferred("set", "disabled", false)
 ```
 
-## 6. Create an ennemy spawner : 
+## 6. Create an enemy spawner : 
 
-We don't need anymore our child node ennemy to be related to our world.
+We don't need anymore our child node enemy to be related to our world.
 
 - Create a 2Dscene node EnemySpawner
 - Add a timer
@@ -268,11 +273,11 @@ We don't need anymore our child node ennemy to be related to our world.
 - Create a new script under utility named spawn_info, double click and add extends Resource to it.
 - Go to section 6.1 to generate the code for our spawn_info script
 - In our EnemySpawner node we are now able to increase size of Spawns and add a spawn_info related to it
-  - We can set now the time range for our ennemy to spawn
-  - The type of ennemy by dragging the kobold.tscn file to ennemy
-- Connect the timer to our ennemy spawner by adding a timeout signal
-- Create the relative code to ennemy_spawner in 6.2
-- Drag and drop the EnnemySpawner node (.tscn) in our world
+  - We can set now the time range for our enemy to spawn
+  - The type of enemy by dragging the kobold.tscn file to enemy
+- Connect the timer to our enemy spawner by adding a timeout signal
+- Create the relative code to enemy_spawner in 6.2
+- Drag and drop the enemySpawner node (.tscn) in our world
 
 ### 6.1. Create a resource/class Spawn_info :
 
@@ -285,16 +290,16 @@ class_name Spawn_info
 
 @export var time_start: int
 @export var time_end: int
-@export var ennemy: Resource
+@export var enemy: Resource
 @export var enemy_num: int
 @export var enemy_spawn_delay: int
 
 var spawn_delay_counter = 0
 ```
 
-### 6.2. Create an ennemy spawner :
+### 6.2. Create an enemy spawner :
 
-Create the logic about ennemy spawner and the spawn location
+Create the logic about enemy spawner and the spawn location
 
 ```GdScript
 @export var spawns : Array[Spawn_info] = []
@@ -303,19 +308,19 @@ var time = 0
 
 func _on_timer_timeout():
 	time += 1
-	var ennemy_spawns = spawns
-	for i in ennemy_spawns:
+	var enemy_spawns = spawns
+	for i in enemy_spawns:
 		if time >= i.time_start and time <= i.time_end:
 			if i.spawn_delay_counter <= i.enemy_spawn_delay: 
 				i.spawn_delay_counter += 1
 			else:
 				i.spawn_delay_counter = 0 
-				var new_ennemy = load(str(i.ennemy.resource_path))
+				var new_enemy = load(str(i.enemy.resource_path))
 				var counter = 0
 				while counter < i.enemy_num: 
-					var ennemy_spawn = new_ennemy.instantiate() 
-					ennemy_spawn.global_position = get_random_position() 
-					add_child(ennemy_spawn)
+					var enemy_spawn = new_enemy.instantiate() 
+					enemy_spawn.global_position = get_random_position() 
+					add_child(enemy_spawn)
 					counter += 1 
 
 func get_random_position():
@@ -350,13 +355,13 @@ func get_random_position():
 ```
 ## 7. Create an ice spear attack : 
 
-We don't need anymore our child node ennemy to be related to our world.
+We don't need anymore our child node enemy to be related to our world.
 
 - Create a 2Dscene node Area2D, make the visibility on top-level
 - Save it to a new folder named Attacks
 - Add a CollisionShape to it 
 - Add a Sprite2D to it, drag the icespear png to it then shape it
-- Add the Area2D collision layer to ennemy since it's an hitbox and will hit the ennemy
+- Add the Area2D collision layer to enemy since it's an hitbox and will hit the enemy
 - Add it to attack group
 - Add timer node (that will set the time the ice_spear existing in case it miss) :  
   - Set One Shot and Autostart to On
@@ -372,11 +377,11 @@ We don't need anymore our child node ennemy to be related to our world.
 - In player script add new code (7.2) and timeouts functions
 - Create a new node Area 2D to our player named EnemyDetectionArea
   - Make it only Monitoring and not Monitorable
-  - Collision has to be set for our ennemy (mask/ layer?)
+  - Collision has to be set for our enemy (mask/ layer?)
   - Add signals body_entered and body_exited
   - Create a new node CollisionShape
     - Add a big circle shape to it to wrap the whole camera rectangle
-- Since we are doing body entered instead of area entered, we have to add our Ennemy to layer 3 for detection since we are looking to ennemy layer
+- Since we are doing body entered instead of area entered, we have to add our enemy to layer 3 for detection since we are looking to enemy layer
 
 ### 7.1. Create the ice spear :
 
@@ -422,7 +427,7 @@ func _on_timer_timeout():
 
 ### 7.2. Add our IceSpear attack logic to our player script :
 
-Create the logic about ennemy spawner and the spawn location
+Create the logic about enemy spawner and the spawn location
 
 ```GdScript
 ""
@@ -439,7 +444,7 @@ var icespear_baseammo = 1
 var icespear_attackspeed = 1.5
 var icespear_level = 1
 
-#Ennemy related
+#enemy related
 var enemy_close = []
 
 func _ready():
@@ -483,6 +488,120 @@ func _on_enemy_detection_area_area_2d_body_exited(body):
 		enemy_close.erase(body)
 ""
 ```
+## 8. Enemy Improvements : 
+
+We're actually working on hurt_box
+
+- We can add few code to add knockback effect to our ice_spear so the enemy is knockkback
+- Hurt_box code in 8.1
+- enemy code in 8.2
+- Since we're knocking back our enemy and ice spear don't disapear on first hit because we put to it 2 health, the enemy took the damage 2 times instead of 1. To deal with this change the hurtbox area to HitOnce and do the code associated to it.
+- Add un audio to our enemy to simulate their hit
+- Create a new scene Sprite2D for death_explosion
+  - Import the sprite to hit and made hit 4x4 frame in animation
+  - Set the z index in ordering to 1 so it displayed on everything
+  - Add a snd_explosion audio player to hit
+    - Set it to autoplay
+  - add an animation player
+    - add animation named explode
+    - set the time animation to 0.32 sec
+    - and the snap to 0.02 (so we got 4x4 frames = 16 * 0.2 = 0.32)
+  - Create a new script attached to it 8.4
+  - Add a signal on animation finished to queue free
+- refactor the death of the enemy
+
+### 8.1. Update HurtBox script :
+
+We will add there the logic about knockback and death explosion in hurtbox 
+
+```GdScript
+""
+func _on_area_entered(area_entering):
+	...
+		1: #HitOnce
+			if hit_once_array.has(area_entering) == false:
+				hit_once_array.append(area_entering)
+				if area_entering.has_signal("remove_from_array"):
+					if not area_entering.is_connected("remove_from_array", Callable(self, "remove_from_list")):
+						area_entering.connect("remove_from_array", Callable(self, "remove_from_list"))
+	...
+	var angle = Vector2.ZERO
+	var knockback = 1
+	if area_entering.get("angle") != null:
+		angle = area_entering.angle 
+	if area_entering.get("knockback_amount") != null:
+		knockback = area_entering.knockback_amount 
+	emit_signal("hurt", damage, angle, knockback)
+			
+""
+```
+
+### 8.2. Update the variable in our IceSpear script :
+
+We're adding the knockback variables and calculating the angle that will be retrieved. We add some sound effect when hit and death too.
+
+```GdScript
+""
+@export var knockback_recovery = 3.5 
+var knockback = Vector2.ZERO
+@onready var walkAnimationPlayer = $walkAnimationPlayer
+@onready var snd_hit = $snd_hit
+var death_anim = preload("res://Ennemy/explosion.tscn")
+
+func _physics_process(_delta):
+	knockback = knockback.move_toward(Vector2.ZERO, knockback_recovery)
+	var direction = global_position.direction_to(player.global_position)
+	velocity = direction*movemement_speed
+	velocity += knockback
+	move_and_slide()
+	...
+""
+```
+
+### 8.3. Update our Enemy script :
+
+We're adding the knockback variables and calculating the new movement in case it takes damage
+
+```GdScript
+""
+var knockback_amount = 100
+var angle = Vector2.ZERO
+
+func _ready():
+	angle = global_position.direction_to(target) 
+	...
+	
+func death():
+	emit_signal("remove_from_array", self)
+	var enemy_death = death_anim.instantiate()
+	enemy_death.scale = sprite2DKobold.scale
+	enemy_death.global_position = global_position
+	get_parent().call_deferred("add_child", enemy_death)
+	queue_free()
+
+func _on_hurt_box_hurt(damage, angle, knockback_amount):
+	health -= damage
+	knockback = angle * knockback_amount #Quand sa hurtbox est touché on applique le knockback si il y en a un
+	if health <= 0:
+		death()
+	else:
+		snd_hit.play()
+""
+```
+
+### 8.4. Create our Explosion script :
+
+We're creating an explosion script to handle the enemy death
+
+```GdScript
+""
+func _ready():
+	$AnimationPlayer.play("explode")
+	
+func _on_animation_player_animation_finished(_anim_name):
+	queue_free()
+""
+```
 
 ## 5. General Settings : 
 	
@@ -521,6 +640,8 @@ func _on_enemy_detection_area_area_2d_body_exited(body):
 	
 - position vs global position
 - Instead of using a timer to make the ice spear remove itself you can instead use a VisibleOnScreenNotifier2D node to detect when the projectile is no longer on screen and then queue_free()
+- Add the range
+- Retrieve the nearest enemy
 
 
 If you want the basics texture go to the [REF](https://github.com/brannotaylor/SurvivorsClone_Base)	

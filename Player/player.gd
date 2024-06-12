@@ -62,7 +62,7 @@ func attack():
 func _physics_process(_delta):
 	movement()
 
-func _on_hurt_box_hurt(damage):
+func _on_hurt_box_hurt(damage, _angle, _knockback_amount):
 	health -= damage
 	print("hp : " + str(health) + " | damage : " + str(damage))
 

@@ -1,11 +1,11 @@
 extends Area2D
 
 var level = 1
-var health = 1
+var pierce = 1 #Une valeur de pierce = 1, se comporte normalement
 var attack_speed = 0.7
 var bullet_speed = 100
 var damage = 5
-var knock_amount = 100
+var knockback_amount = 100
 var attack_area = 1.0
 
 var target = Vector2.ZERO
@@ -19,18 +19,18 @@ func _ready():
 	rotation = angle.angle() + deg_to_rad(135) #On set la property rotation de l'ice spear en transforamnt les degré en radiant, par défaut l'ice spear est en -45 donc (-45+135 = 90 = icespear a l'horizontal Vector(1,0))
 	match level:
 		1:
-			health = 2
+			pierce = 2
 			attack_speed = 1
 			bullet_speed = 100
 			damage = 5
-			knock_amount = 100
+			knockback_amount = 100
 			attack_area = 1.0
 		2:
-			health = 1
+			pierce = 1
 			attack_speed = 0.7
 			bullet_speed = 100
 			damage = 6
-			knock_amount = 100
+			knockback_amount = 100
 			attack_area = 1.0
 	#Permet de créer un effet sur le projectile ici		
 	var tween = create_tween()
@@ -42,12 +42,14 @@ func _ready():
 func _physics_process(delta):
 	position += angle * bullet_speed * delta
 	
-#Décrit la logique lorsqu'on touche un ennemi (pour supprimer l'attaque, si on ne fait pas cette méthode alors l'attaque passe a travers
+#Décrit la logique lorsqu'on touche un ennemi 
 func enemy_hit(charge = 1):
-	health -= charge #Si on touche on reduit la "vie' de l'ice spear par 1
-	if health <= 0:
-		queue_free() #la vie est nulle ou inférieur a 0 on supprime l'attaque
+	pierce -= charge #Si on touche on reduit la pierce de l'ice spear par 1
+	if pierce <= 0: #(pour supprimer l'attaque, si on ne fait pas cette méthode alors l'attaque passe a travers)
+		emit_signal("remove_from_array", self) #Ici on supprime notre ice spear de l'array avant de le supprimer
+		queue_free() #Le pierce est nulle ou inférieur a 0 on supprime l'attaque
 		
 #Après 10 secondes on supprime le ice spear (dans le cas ou on miss)
 func _on_timer_timeout():
+	emit_signal("remove_from_array", self) #on le supprime également de l'array
 	queue_free()
