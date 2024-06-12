@@ -11,6 +11,8 @@ var attack_area = 1.0
 var target = Vector2.ZERO
 var angle = Vector2.ZERO
 
+signal remove_from_array(object)
+
 @onready var player = get_tree().get_first_node_in_group("player")
 
 #Actif dès la premiere frame

@@ -1,21 +1,30 @@
 extends CharacterBody2D
 
-var movement_speed: float = 40.0
+var movement_speed: float = 60.0
 var health = 80
 var attack_speed = 0.1
+var cast_speed = 0.3
+
+var last_movement = Vector2.UP #Recupère notre précédent mouvement
 
 #Attacks
 var iceSpear = preload("res://Player/Attacks/ice_spear_area_2d.tscn")
+var tornado = preload("res://Player/Attacks/tornado.tscn")
 
 #AttacksNodes
-@onready var iceSpearTimer = get_node("%IceSpearTimer")
-@onready var iceSpearAttackTimer = get_node("%IceSpearAttackTimer")
+@onready var iceSpearTimer = get_node("%IceSpearReloadTimer") #reload
+@onready var iceSpearAttackTimer = get_node("%IceSpearAttackTimer") #attack speed
+#@onready var tornadoTimer = get_node("%TornadoTimer") 
+@onready var tornadoAttackTimer = get_node("%TornadoAttackTimer")
 
 #IceSpear
 var icespear_ammo = 0
 var icespear_baseammo = 2
 var icespear_reloadspeed = 3
 var icespear_level = 1
+
+#Tornado
+var tornado_level = 1
 
 #Ennemy related
 var enemy_close = []
@@ -41,6 +50,7 @@ func movement():
 	
 	#Ici on fait l'annimation de la marche en jouant sur les frames (2)	
 	if move != Vector2.ZERO: #On verifie si on bouge ou non
+		last_movement = move #On met à jour le dernier mouvement avec le nouveau
 		if walkTimer.is_stopped(): #Si le walkTimer est arreté
 			if sprite2Dplayer.frame >= sprite2Dplayer.hframes - 1: #Frame start to 0 and hframe at 2 that's why we set -1
 				sprite2Dplayer.frame = 0 #It reset it to 0
@@ -53,9 +63,12 @@ func movement():
 	
 func attack():
 	if icespear_level > 0:
-		iceSpearTimer.wait_time = icespear_reloadspeed
+		iceSpearTimer.wait_time = icespear_reloadspeed #On set le reload speed ici
 		if iceSpearTimer.is_stopped():
 			iceSpearTimer.start()
+	if tornado_level > 0:
+		if tornadoAttackTimer.is_stopped():
+			tornadoAttackTimer.start()
 			
 #Function nécéssaire pour que Godot interprete la physique du personnage
 #Run automatique toutes les 1/60 seconds | delta = une seconde/frame rate (permet de se déplacer aussi rapidement selon le frame rate)
@@ -76,16 +89,25 @@ func _on_ice_spear_attack_timer_timeout():
 	if icespear_ammo > 0:
 		var icespear_attack = iceSpear.instantiate()
 		icespear_attack.position = position #On utilise la position relative au parent car on shoot directement depuis le joueur pas besoins de global pos
-		icespear_attack.target = get_random_target()
+		icespear_attack.target = get_random_target() #Ici on shoot vers un ennemi random
 		icespear_attack.level = icespear_level
 		add_child(icespear_attack)
 		iceSpearAttackTimer.wait_time = icespear_attack.attack_speed * (1-attack_speed)
-		print("After adding child | player attack_speed %s, icespear base attack_speed %s, final attack speed for that attack %s" % [attack_speed, icespear_attack.attack_speed, iceSpearAttackTimer.wait_time])
 		icespear_ammo -= 1 #On enlève une munition
 		if icespear_ammo > 0:
 			iceSpearAttackTimer.start()
 		else:
 			iceSpearAttackTimer.stop()
+
+func _on_tornado_attack_timer_timeout():
+	var tornado_attack = tornado.instantiate()
+	tornado_attack.position = position #On utilise la position relative au parent car on shoot directement depuis le joueur pas besoins de global pos
+	tornado_attack.last_movement = last_movement #Ici on shoot vers le dernier endroit on on a marché avec un modulo
+	tornado_attack.level = tornado_level
+	add_child(tornado_attack)
+	tornadoAttackTimer.wait_time = tornado_attack.cast_speed * (1-cast_speed)
+	print("After adding child | player cast_speed %s, tornado base cast_speed %s, final attack speed for that attack %s" % [cast_speed, tornado_attack.cast_speed, tornadoAttackTimer.wait_time])
+	tornadoAttackTimer.start()
 		
 func get_random_target():
 	if enemy_close.size() > 0: #Si on a au moins un ennemi proche

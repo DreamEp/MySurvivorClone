@@ -48,4 +48,9 @@ func _on_hurt_box_hurt(damage, angle, knockback_amount):
 	if health <= 0:
 		death()
 	else:
+		var tween_color = create_tween()
+		tween_color.tween_property(self, "modulate", Color(Color.RED), 0.1).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN_OUT) #Permet que lorsque le kobold subit des dégats on change rapidement sa couleur en rouge
+		tween_color.tween_property(self, "modulate", self.modulate, 0.1).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) #Puis celle-ci revient à la normale
+		tween_color.set_loops(2) #On l'applique 2 fois pour faire un effet
+		tween_color.play()
 		snd_hit.play()

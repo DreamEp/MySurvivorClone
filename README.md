@@ -28,6 +28,12 @@
 		- [8.2. Update the variable in our IceSpear script :](#82-update-the-variable-in-our-icespear-script-)
 		- [8.3. Update our Enemy script :](#83-update-our-enemy-script-)
 		- [8.4. Create our Explosion script :](#84-create-our-explosion-script-)
+	- [9. Create a Tornado attack / hitbox:](#9-create-a-tornado-attack--hitbox)
+		- [9.1. Create the tornado script :](#91-create-the-tornado-script-)
+		- [9.2. Add our Tornado attack logic to our player script :](#92-add-our-tornado-attack-logic-to-our-player-script-)
+	- [10. Create a Javelo/Summon/Hitbox:](#10-create-a-javelosummonhitbox)
+		- [10.1. Create the tornado script :](#101-create-the-tornado-script-)
+		- [10.2. Add our Tornado attack logic to our player script :](#102-add-our-tornado-attack-logic-to-our-player-script-)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -488,6 +494,7 @@ func _on_enemy_detection_area_area_2d_body_exited(body):
 		enemy_close.erase(body)
 ""
 ```
+
 ## 8. Enemy Improvements : 
 
 We're actually working on hurt_box
@@ -548,13 +555,21 @@ var knockback = Vector2.ZERO
 @onready var snd_hit = $snd_hit
 var death_anim = preload("res://Ennemy/explosion.tscn")
 
-func _physics_process(_delta):
-	knockback = knockback.move_toward(Vector2.ZERO, knockback_recovery)
-	var direction = global_position.direction_to(player.global_position)
-	velocity = direction*movemement_speed
-	velocity += knockback
-	move_and_slide()
+signal remove_from_array(object)
+
+func _ready():
+	angle = global_position.direction_to(target) 
 	...
+
+func enemy_hit(charge = 1):
+	pierce -= charge
+	if pierce <= 0: 
+		emit_signal("remove_from_array", self) 
+		queue_free() 
+		
+func _on_timer_timeout():
+	emit_signal("remove_from_array", self) 
+	queue_free()
 ""
 ```
 
@@ -564,13 +579,14 @@ We're adding the knockback variables and calculating the new movement in case it
 
 ```GdScript
 ""
-var knockback_amount = 100
-var angle = Vector2.ZERO
-
-func _ready():
-	angle = global_position.direction_to(target) 
+func _physics_process(_delta):
+	knockback = knockback.move_toward(Vector2.ZERO, knockback_recovery)
+	var direction = global_position.direction_to(player.global_position)
+	velocity = direction*movemement_speed
+	velocity += knockback
+	move_and_slide()
 	...
-	
+
 func death():
 	emit_signal("remove_from_array", self)
 	var enemy_death = death_anim.instantiate()
@@ -581,7 +597,7 @@ func death():
 
 func _on_hurt_box_hurt(damage, angle, knockback_amount):
 	health -= damage
-	knockback = angle * knockback_amount #Quand sa hurtbox est touché on applique le knockback si il y en a un
+	knockback = angle * knockback_amount 
 	if health <= 0:
 		death()
 	else:
@@ -600,6 +616,284 @@ func _ready():
 	
 func _on_animation_player_animation_finished(_anim_name):
 	queue_free()
+""
+```
+
+## 9. Create a Tornado attack / hitbox: 
+
+We are just creating a new spell / hitbox
+
+- Create a 2Dscene node Area2D, make the visibility on top-level
+- Save it to folder named Attacks
+- Add a CollisionShape to it 
+- Add a Sprite2D to it, drag the tornado png to it then shape it
+- Add the Area2D collision layer to enemy since it's an hitbox and will hit the enemy
+- Add it to attack group
+- Add timer node (that will set the time the tonado existing in case it miss) :  
+  - Set Autostart to On
+  - Set timer to 20sec
+  - Create the timeout signal
+- Add a script to our new scene (9.1)
+- In player script add new code (9.2)
+  - We will now retrieve the last movement we did
+- Add audio_stream_player node:
+  - add the sound to it
+  - auto play 
+  - pitch is the time the sound to play
+- To our node2D Attacks:
+    - Add to this a timer named TornadoAttackTimer 0.2s, access as unique node
+- The main change there is we're playing the attack not directly to a target but to where we face last timed
+- The goald is to achieve an attack wich change angle during his life, here we are going in a cone to the faced direction
+
+### 9.1. Create the tornado script :
+
+It will define how the tornado attack / hitbox works and the variables attached to it
+
+```GdScript
+extends Area2D
+
+var level = 1
+var pierce = 999
+var cast_speed = 0.7
+var base_bullet_speed = 20
+var final_bullet_speed = 80
+var damage = 2
+var attack_area = 1.0
+
+var tween_change_direction_time =  3
+var tween_change_size_time = 3
+var tween_change_bulletspeed_time = 7
+
+var last_movement = Vector2.ZERO
+var angle = Vector2.ZERO
+var angle_less = Vector2.ZERO
+var angle_more = Vector2.ZERO
+var target = Vector2.ZERO
+
+signal remove_from_array(object)
+
+@onready var player = get_tree().get_first_node_in_group("player")
+
+func _ready():
+	match level:
+		1:
+			pierce = 999
+			cast_speed = 2
+			base_bullet_speed = 20
+			final_bullet_speed = base_bullet_speed * 5
+			damage = 2
+			attack_area = 1.2
+		2:
+			pierce = 999 
+			cast_speed = 2
+			base_bullet_speed = 50
+			final_bullet_speed = base_bullet_speed * 3
+			damage = 2
+			attack_area = 1.4
+	var move_to_less = Vector2.ZERO
+	var move_to_more = Vector2.ZERO
+	match last_movement: 
+		Vector2.UP, Vector2.DOWN: 
+			move_to_less = global_position + Vector2(randf_range(-1, -0.25), last_movement.y) * 500 
+			move_to_more = global_position + Vector2(randf_range(0.25, 1), last_movement.y) * 500 
+		Vector2.RIGHT, Vector2.LEFT: 
+			move_to_less = global_position + Vector2(last_movement.x, randf_range(-1, -0.25)) * 500 
+			move_to_more = global_position + Vector2(last_movement.x, randf_range(0.25, 1)) * 500 
+		Vector2(1,-1), Vector2(1,1), Vector2(-1,1), Vector2(-1,-1):
+			move_to_less = global_position + Vector2(last_movement.x, last_movement.y * randf_range(0,0.75)) * 500
+			move_to_more = global_position + Vector2(last_movement.x * randf_range(0,0.75), last_movement.y) * 500
+	angle_less = global_position.direction_to(move_to_less)
+	angle_more = global_position.direction_to(move_to_more) 
+	
+	var initial_tween = create_tween().set_parallel(true)
+	initial_tween.tween_property(self, "scale", Vector2(1,1) * attack_area, tween_change_size_time).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) 
+	initial_tween.tween_property(self, "base_bullet_speed", final_bullet_speed, tween_change_bulletspeed_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT) 
+	initial_tween.play()
+	
+	var tween = create_tween() 
+	var set_angle = randi_range(0, 1) 
+	if set_angle == 1:
+		angle = angle_less
+		tween.tween_property(self, "angle", angle_more, tween_change_direction_time)
+		tween.tween_property(self, "angle", angle_less, tween_change_direction_time)
+	else :
+		angle = angle_more
+		tween.tween_property(self, "angle", angle_less, tween_change_direction_time)
+		tween.tween_property(self, "angle", angle_more, tween_change_direction_time)
+	tween.set_loops()
+	tween.play()
+
+func _physics_process(delta):
+	position += angle * base_bullet_speed * delta
+
+func _on_timer_timeout():
+	emit_signal("remove_from_array", self)
+	queue_free()
+	
+```
+
+### 9.2. Add our Tornado attack logic to our player script :
+
+Create the logic about tornado spell / hitbox, you will see the tornado works without loading
+
+```GdScript
+""
+#Tornado
+var tornado_level = 1
+
+func attack():
+	...
+	if tornado_level > 0:
+		if tornadoAttackTimer.is_stopped():
+			tornadoAttackTimer.start()
+
+func _on_tornado_attack_timer_timeout():
+	var tornado_attack = tornado.instantiate()
+	tornado_attack.position = position 
+	tornado_attack.last_movement = last_movement
+	tornado_attack.level = tornado_level
+	add_child(tornado_attack)
+	tornadoAttackTimer.wait_time = tornado_attack.cast_speed * (1-cast_speed)
+	tornadoAttackTimer.start()
+""
+```
+
+## 10. Create a Javelo/Summon/Hitbox: 
+
+We are just creating a new spell / hitbox
+
+- Create a 2Dscene node Area2D, make the visibility on top-level
+- Save it to folder named Attacks
+- Add a CollisionShape to it 
+- Add a Sprite2D to it, drag the tornado png to it then shape it
+- Add the Area2D collision layer to enemy since it's an hitbox and will hit the enemy
+- Add it to attack group
+- Add timer node (that will set the time the tonado existing in case it miss) :  
+  - Set Autostart to On
+  - Set timer to 20sec
+  - Create the timeout signal
+- Add a script to our new scene (9.1)
+- In player script add new code (9.2)
+  - We will now retrieve the last movement we did
+- Add audio_stream_player node:
+  - add the sound to it
+  - auto play 
+  - pitch is the time the sound to play
+- To our node2D Attacks:
+    - Add to this a timer named TornadoAttackTimer 0.2s, access as unique node
+- The main change there is we're playing the attack not directly to a target but to where we face last timed
+- The goald is to achieve an attack wich change angle during his life, here we are going in a cone to the faced direction
+
+### 10.1. Create the tornado script :
+
+It will define how the tornado attack / hitbox works and the variables attached to it
+
+```GdScript
+extends Area2D
+
+var level = 1
+var pierce = 999
+var cast_speed = 0.7
+var base_bullet_speed = 20
+var final_bullet_speed = 80
+var damage = 2
+var attack_area = 1.0
+
+var tween_change_direction_time =  3
+var tween_change_size_time = 3
+var tween_change_bulletspeed_time = 7
+
+var last_movement = Vector2.ZERO
+var angle = Vector2.ZERO
+var angle_less = Vector2.ZERO
+var angle_more = Vector2.ZERO
+var target = Vector2.ZERO
+
+signal remove_from_array(object)
+
+@onready var player = get_tree().get_first_node_in_group("player")
+
+func _ready():
+	match level:
+		1:
+			pierce = 999
+			cast_speed = 2
+			base_bullet_speed = 20
+			final_bullet_speed = base_bullet_speed * 5
+			damage = 2
+			attack_area = 1.2
+		2:
+			pierce = 999 
+			cast_speed = 2
+			base_bullet_speed = 50
+			final_bullet_speed = base_bullet_speed * 3
+			damage = 2
+			attack_area = 1.4
+	var move_to_less = Vector2.ZERO
+	var move_to_more = Vector2.ZERO
+	match last_movement: 
+		Vector2.UP, Vector2.DOWN: 
+			move_to_less = global_position + Vector2(randf_range(-1, -0.25), last_movement.y) * 500 
+			move_to_more = global_position + Vector2(randf_range(0.25, 1), last_movement.y) * 500 
+		Vector2.RIGHT, Vector2.LEFT: 
+			move_to_less = global_position + Vector2(last_movement.x, randf_range(-1, -0.25)) * 500 
+			move_to_more = global_position + Vector2(last_movement.x, randf_range(0.25, 1)) * 500 
+		Vector2(1,-1), Vector2(1,1), Vector2(-1,1), Vector2(-1,-1):
+			move_to_less = global_position + Vector2(last_movement.x, last_movement.y * randf_range(0,0.75)) * 500
+			move_to_more = global_position + Vector2(last_movement.x * randf_range(0,0.75), last_movement.y) * 500
+	angle_less = global_position.direction_to(move_to_less)
+	angle_more = global_position.direction_to(move_to_more) 
+	
+	var initial_tween = create_tween().set_parallel(true)
+	initial_tween.tween_property(self, "scale", Vector2(1,1) * attack_area, tween_change_size_time).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) 
+	initial_tween.tween_property(self, "base_bullet_speed", final_bullet_speed, tween_change_bulletspeed_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT) 
+	initial_tween.play()
+	
+	var tween = create_tween() 
+	var set_angle = randi_range(0, 1) 
+	if set_angle == 1:
+		angle = angle_less
+		tween.tween_property(self, "angle", angle_more, tween_change_direction_time)
+		tween.tween_property(self, "angle", angle_less, tween_change_direction_time)
+	else :
+		angle = angle_more
+		tween.tween_property(self, "angle", angle_less, tween_change_direction_time)
+		tween.tween_property(self, "angle", angle_more, tween_change_direction_time)
+	tween.set_loops()
+	tween.play()
+
+func _physics_process(delta):
+	position += angle * base_bullet_speed * delta
+
+func _on_timer_timeout():
+	emit_signal("remove_from_array", self)
+	queue_free()
+	
+```
+
+### 10.2. Add our Tornado attack logic to our player script :
+
+Create the logic about tornado spell / hitbox, you will see the tornado works without loading
+
+```GdScript
+""
+#Tornado
+var tornado_level = 1
+
+func attack():
+	...
+	if tornado_level > 0:
+		if tornadoAttackTimer.is_stopped():
+			tornadoAttackTimer.start()
+
+func _on_tornado_attack_timer_timeout():
+	var tornado_attack = tornado.instantiate()
+	tornado_attack.position = position 
+	tornado_attack.last_movement = last_movement
+	tornado_attack.level = tornado_level
+	add_child(tornado_attack)
+	tornadoAttackTimer.wait_time = tornado_attack.cast_speed * (1-cast_speed)
+	tornadoAttackTimer.start()
 ""
 ```
 

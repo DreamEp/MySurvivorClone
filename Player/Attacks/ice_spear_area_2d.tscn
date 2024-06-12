@@ -22,7 +22,7 @@ position = Vector2(0.749999, -0.750001)
 rotation = -0.785398
 shape = SubResource("RectangleShape2D_0wal0")
 
-[node name="Timer" type="Timer" parent="."]
+[node name="IceSpearMaxDurabilityTimer" type="Timer" parent="."]
 wait_time = 10.0
 one_shot = true
 autostart = true
@@ -33,4 +33,4 @@ volume_db = -8.0
 pitch_scale = 4.0
 autoplay = true
 
-[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="timeout" from="IceSpearMaxDurabilityTimer" to="." method="_on_timer_timeout"]
