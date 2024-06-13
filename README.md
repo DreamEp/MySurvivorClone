@@ -33,10 +33,13 @@
 		- [9.2. Add our Tornado attack logic to our player script :](#92-add-our-tornado-attack-logic-to-our-player-script-)
 	- [10. Create a Javelo/Summon/Hitbox:](#10-create-a-javelosummonhitbox)
 		- [10.1. Create the Javellin script :](#101-create-the-javellin-script-)
-	- [11. Manage experience:](#11-manage-experience)
+	- [11. Manage experience \& GUI :](#11-manage-experience--gui-)
 		- [11.1. Create the gem script :](#111-create-the-gem-script-)
-		- [11.2. Update the plyaer script:](#112-update-the-plyaer-script)
+		- [11.2. Update the player script:](#112-update-the-player-script)
 		- [11.3. Update the enemy script :](#113-update-the-enemy-script-)
+	- [12. Manage GUI leveling:](#12-manage-gui-leveling)
+		- [12.1. Create our new button scene for our option/upgrade :](#121-create-our-new-button-scene-for-our-optionupgrade-)
+		- [11.2. Update the player script:](#112-update-the-player-script-1)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -931,7 +934,7 @@ func _on_reset_pos_timer_timeout():
 			reset_pos.y -= 50
 
 ```
-## 11. Manage experience: 
+## 11. Manage experience & GUI : 
 
 We are creating experience logic
 
@@ -1009,7 +1012,7 @@ func _on_snd_collected_finished():
 ""
 ```
 
-### 11.2. Update the plyaer script:
+### 11.2. Update the player script:
 
 It will define how to calculate xpp, and retrieve the gem.
 
@@ -1076,7 +1079,119 @@ func death():
 	new_gem.global_position = global_position 
 	new_gem.experience = randi_range(min_experience, max_experience)
 	lootBase.call_deferred('add_child', new_gem)
+
+""
+```
+
+## 12. Manage GUI leveling: 
+
+We are creating leveling logic
+
+- Add a LevelUp Panel (= transparant background) node to our GUI node in player scene
+  - Access as unique node
+  - 200 * 250, position 220, 50 (Control - Layout - Transform)
+  - Create a new Label node called LabelLevelUp
+    - Add our font to it
+  - Create a vBoxContainer node (UpgradeOptions)
+    - Set it to access as unique node
+  - Create a audio stream classic and put the sound level up
+  - Set the LevelUP pannel to process - mode = When paused (so it will show when paused)
+- Create a new button scene (12.1)
+  - Add background
+  - Add some label to it to handle the item name, level and description
+  - Add an icon to it with a background to it
+  - Add a signal on press that will call our player function selected_upgrade
+- Create the functions in our player (12.2)
+  - handle the pause
+  - handle the fill of vboxContainer with our neww scene
+
+### 12.1. Create our new button scene for our option/upgrade :
+
+It will define how the gem object works and the variables attached to it
+
+```GdScript
+extends Area2D
+
+@export var experience = 1 
+
+var green_gem = preload("res://Textures/Items/Gems/Gem_green.png") 
+var blue_gem= preload("res://Textures/Items/Gems/Gem_blue.png") 
+var red_gem = preload("res://Textures/Items/Gems/Gem_red.png") 
+
+var target = null 
+var speed = -0.5 
+
+@onready var sprite = $Sprite2D 
+@onready var collision = $CollisionShape2D 
+@onready var sound = $snd_collected 
+
+func _ready():
+	if experience < 5: 
+		return
+	elif experience < 25:  
+		sprite.texture = blue_gem
+	else:
+		sprite.texture = red_gem  
+
+func _physics_process(delta):
+	if target != null: 
+		global_position = global_position.move_toward(target.global_position, speed) 
+		speed += 2 * delta 
+
+func collect():
+	sound.play() 
+	collision.call_deferred("set","disabled",true) 
+	sprite.visible = false 
+	return experience 
+
+
+func _on_snd_collected_finished():
+	queue_free()
+""
+```
+
+### 11.2. Update the player script:
+
+It will define how to handle the level up, tha pause of the game and the gui.
+
+```GdScript
+@onready var upgradeOptions = get_node("%UpgradeOption")
+@onready var itemOptions = preload("res://Utility/item_option.tscn")
+
+""
+
+func calculate_experience(gem_exp):
+	...
+	if player_experience + player_collected_experience >= exp_required: 
+		...
+		levelup()
+		#calculate_experience(0)
+	else:
+		...
+
+func levelup():
+	sndLevelUp.play()
+	labelLevel.text = str("Level : ", player_experience_level) 
+	var tween = levelPanel.create_tween() 
+	tween.tween_property(levelPanel, "position", Vector2(220, 50), 0.2).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN) 
+	tween.play()
+	levelPanel.visible = true 
+	var options = 0 
+	var optionsmax = 3 
+	while options < optionsmax: 
+		var option_choice = itemOptions.instantiate() 
+		upgradeOptions.add_child(option_choice)
+		options += 1
+	get_tree().paused = true 
 	
+func upgrade_character(upgrade):
+	var option_children = upgradeOptions.get_children() 
+	for i in option_children: 
+		i.queue_free() 
+	levelPanel.visible = false 
+	levelPanel.position = Vector2(800, 50) 
+	get_tree().paused = false 
+	calculate_experience(0) 
 ""
 ```
 
@@ -1112,7 +1227,9 @@ func death():
   - Thanks to tween we can change a property of a given node given a duration to accomplish this, giving the tween.tween_property(node, property, end_result, duration)
   - We can run multiple tween for the same node, by default they wwill run one after the other but we can run them simultany by setting create_tween().set_parallel(true). We use then .chain() if we want an exception to run not in parallel
   - The _trans define how the tween will comport itself during the duration [(here)](https://preview.redd.it/zdzhci8octp41.png?auto=webp&s=e26a297d816b53482ca2d0199ba71761fe54c3c7) for a good comportement visualization. By default SINE < CUBIC < QUINT
-  - Blue node = 2D, Green one = Graphical User Interface, Red one = 3D
+- Blue node = 2D, Green one = Graphical User Interface, Red one = 3D
+- The pause mechanics is defined in each of the node in Process Mode, we can change here how the pause will process the node. We can set to inherit all the child so they act like the parent.
+
 
 ## 7. Review/Missunderstanding : 
 	
@@ -1121,6 +1238,8 @@ func death():
 - Add the range
 - Retrieve the nearest enemy
 - Javelin freeze a little on retrieve real time position of player and mooving
+- Progress bar smooth
+- Review experience scaling
 
 
 If you want the basics texture go to the [REF](https://github.com/brannotaylor/SurvivorsClone_Base)	

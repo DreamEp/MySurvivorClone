@@ -47,6 +47,11 @@ var enemy_close = []
 #GUI
 @onready var expBar =  get_node("%ExperienceBar")
 @onready var labelLevel = get_node("%LabelLevel")
+@onready var levelPanel = get_node("%LevelUp")
+@onready var sndLevelUp = get_node("%snd_levelup")
+
+@onready var upgradeOptions = get_node("%UpgradeOption")
+@onready var itemOptions = preload("res://Utility/item_option.tscn")
 
 #Se lance dès la première frame
 func _ready():
@@ -100,7 +105,6 @@ func _on_hurt_box_hurt(damage, _angle, _knockback_amount):
 	var tween_color = create_tween()
 	tween_color.tween_property(self, "modulate", Color(Color.RED), 0.1).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN_OUT) #Permet que lorsque le kobold subit des dégats on change rapidement sa couleur en rouge
 	tween_color.tween_property(self, "modulate", player_current_sprite_color, 0.1).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) #Puis celle-ci revient à la normale
-	tween_color.set_loops(2) #On l'applique 2 fois pour faire un effet
 	tween_color.play()
 	print("hp : " + str(player_health) + " | damage : " + str(damage))
 
@@ -174,10 +178,9 @@ func calculate_experience(gem_exp):
 	if player_experience + player_collected_experience >= exp_required: #Si l'experience collecté est supérieur a l'expérience requise pour level up
 		player_collected_experience -= exp_required - player_experience #On recupere le surplus potentiel d'expérience pour le nouveau niveau
 		player_experience_level += 1 #On level up notre niveau d'expérience
-		labelLevel.text = str("Level : ", player_experience_level)
 		player_experience = 0
 		exp_required = calculate_experience_cap() #On met a jour l'experience requise
-		calculate_experience(0) #Permet de gérer plusieurs level up d'un coup
+		levelup() #On call la function pour levelup qui gère le process d'upgrade etc..
 		print("Level UP ! Level experience: %s, experience_collected: %s, experience: %s, experience_required: %s, triggered_amount_xp: %s"  % [player_experience_level, player_collected_experience, player_experience, exp_required, gem_exp])
 	else:
 		player_experience += player_collected_experience #On met a jour l'experience de notre joeur
@@ -188,14 +191,40 @@ func calculate_experience(gem_exp):
 #Ici on fait le calcule de l'expérience collecté selon les levels, avant de level up	
 func calculate_experience_cap():
 	var exp_cap = player_experience_level
-	if player_experience_level < 20:
-		exp_cap = player_experience_level * 5 #Permet de dire que les 20 premier niveau il faut 5 * l'xp pour level up
+	if player_experience_level < 20: 
+		exp_cap = player_experience_level * 5 #Permet de dire que les 20 premier niveau il faut 5 * l'xp pour level up lvl 1 : 5xp, lv 2 : 10 xp, lv 3 :15 (15+10+5=25au total)
 	elif player_experience_level < 40:
 		exp_cap = 95 + (player_experience - 19) * 8 #Permet de dire que les 20 à 40 niveau il faut 8 * l'xp pour level up
 	else:
 		exp_cap = 255 + (player_experience - 39) * 12 #Permet de dire qu'à partir du niveau 40 il faut 12 * l'xp pour level up
 	return exp_cap
 
+#Fonction qui met à jour la barre d'exp
 func set_expbar(set_value = 1, set_max_value = 100):
 	expBar.value = set_value
 	expBar.max_value = set_max_value
+
+#Function qui gère le menu d'affichage quand on level up (GUI)
+func levelup():
+	sndLevelUp.play() #On joue le son de level up
+	labelLevel.text = str("Level : ", player_experience_level) #On met a jour le texte avec le level actuel
+	var tween = levelPanel.create_tween() #On créer un tween sur le Pannel pour modifier sa position
+	tween.tween_property(levelPanel, "position", Vector2(220, 50), 0.2).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_IN) #On approche le panel de level up du centre !
+	tween.play()
+	levelPanel.visible = true #On rend le pannel levelUp visible que lorsqu'on level up
+	var options = 0 #Compteur pour voir combien on a d'option
+	var optionsmax = 3 #On set combien d'options d'upgrade max on veut afficher
+	while options < optionsmax: #Tant qu'on a pas atteint la limite d'option a afficher on en créer
+		var option_choice = itemOptions.instantiate() #On instancie notre objet option via ça scene
+		upgradeOptions.add_child(option_choice) #On l'ajoute a notre node vboxOption
+		options += 1
+	get_tree().paused = true #On pause alors le jeux
+	
+func upgrade_character(upgrade):
+	var option_children = upgradeOptions.get_children() #On recupere les différentes options du pannel
+	for i in option_children: 
+		i.queue_free() #On supprime chaque option du pannel
+	levelPanel.visible = false #On rend invisible le pannel de monter de niveau
+	levelPanel.position = Vector2(800, 50) #On replace loin le pannel pour avoir de nouveau l'effet quand il pop
+	get_tree().paused = false #On met le jeux en marche à nouveau
+	calculate_experience(0) #Permet de gérer plusieurs level up d'un coup
