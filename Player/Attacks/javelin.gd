@@ -10,8 +10,8 @@ var damage = 5
 var knockback_amount = 100
 var max_ennemy_numbers_paths = 3 #Nombre d'ennemies sur lesquels enchainés / ou bounce
 var attack_area = 1.0
-var salve_attack_delay = 7.0
-var next_attack_delay = 3.0
+var salve_attack_delay = 5.0
+var next_attack_delay = 1.5
 var spawn_delay = 30
 
 
@@ -130,10 +130,12 @@ func _on_change_direction_timeout():
 			emit_signal("remove_from_array", self) #On supprime de l'array cet ennemi pour pouvoir le retoucher par la suite
 		else:
 			changeDirectionTimer.stop() #Si il n'y a plus d'ennemi on set le timer changement de direction en stop
+			resetPosTimer.stop()
 			attackTimer.start() #On start le timer avant une nouvelle volée d'attaque
 			enable_attack(false) #On set notre javelot en mode attaque a false
 	else:
 		changeDirectionTimer.stop() #Si il n'y a plus d'ennemi on set le timer changement de direction en stop
+		resetPosTimer.stop()
 		attackTimer.start() #On start le timer avant une nouvelle volée d'attaque
 		enable_attack(false) #On set notre javelot en mode attaque a false
 

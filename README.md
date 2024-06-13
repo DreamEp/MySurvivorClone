@@ -33,7 +33,10 @@
 		- [9.2. Add our Tornado attack logic to our player script :](#92-add-our-tornado-attack-logic-to-our-player-script-)
 	- [10. Create a Javelo/Summon/Hitbox:](#10-create-a-javelosummonhitbox)
 		- [10.1. Create the Javellin script :](#101-create-the-javellin-script-)
-		- [10.2. Add our Tornado attack logic to our player script :](#102-add-our-tornado-attack-logic-to-our-player-script-)
+	- [11. Manage experience:](#11-manage-experience)
+		- [11.1. Create the gem script :](#111-create-the-gem-script-)
+		- [11.2. Update the plyaer script:](#112-update-the-plyaer-script)
+		- [11.3. Update the enemy script :](#113-update-the-enemy-script-)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -928,30 +931,152 @@ func _on_reset_pos_timer_timeout():
 			reset_pos.y -= 50
 
 ```
+## 11. Manage experience: 
 
-### 10.2. Add our Tornado attack logic to our player script :
+We are creating experience logic
 
-Create the logic about tornado spell / hitbox, you will see the tornado works without loading
+- Create a 2Dscene node Area2D, make the visibility on top-level this is for our gems
+- Save it to folder named Objects
+- Add a CollisionShape to it 
+- Add a Sprite2D to it, drag the gem png to it then shape it
+- Add the Area2D collision layer to Loot
+- Add it to loot group
+- Add audio node 
+- Add a script to our new scene (11.1)
+- In player script add new code (11.2)
+  - We will now retrieve the last movement we did
+- Add audio_stream_player node:
+- In our player, we're adding to new Area2D (GrabArea, CollectArea), add them to Loot Mask
+    - Create Collision for them, the grab one will give the range of grab, and the collect one the range where we play our collect script
+    - Add an area_entered signal for both
+    - Create the relative code to experience process
+  - Add some UI, use a canvas node
+    - Add a Control node to it GUI
+      - Set the size 640 * 360 (Layout - Transform)
+      - Add a texture bar to it
+        - Drag png for our background
+        - Drag png for our progress
+        - Access as unique name
+          - Add a LabelLevel node
+            - Import our font to it (control - themes overrides - fonts)
+            - Change size 100 * 20 (Layout - Transform)
+            - Change the position (Label Alignment)
+            - Access as unique name
+- Add the gem spawn to our enemy script (11.3)
+
+### 11.1. Create the gem script :
+
+It will define how the gem object works and the variables attached to it
+
+```GdScript
+extends Area2D
+
+@export var experience = 1 
+
+var green_gem = preload("res://Textures/Items/Gems/Gem_green.png") 
+var blue_gem= preload("res://Textures/Items/Gems/Gem_blue.png") 
+var red_gem = preload("res://Textures/Items/Gems/Gem_red.png") 
+
+var target = null 
+var speed = -0.5 
+
+@onready var sprite = $Sprite2D 
+@onready var collision = $CollisionShape2D 
+@onready var sound = $snd_collected 
+
+func _ready():
+	if experience < 5: 
+		return
+	elif experience < 25:  
+		sprite.texture = blue_gem
+	else:
+		sprite.texture = red_gem  
+
+func _physics_process(delta):
+	if target != null: 
+		global_position = global_position.move_toward(target.global_position, speed) 
+		speed += 2 * delta 
+
+func collect():
+	sound.play() 
+	collision.call_deferred("set","disabled",true) 
+	sprite.visible = false 
+	return experience 
+
+
+func _on_snd_collected_finished():
+	queue_free()
+""
+```
+
+### 11.2. Update the plyaer script:
+
+It will define how to calculate xpp, and retrieve the gem.
+
+```GdScript
+
+var player_experience = 0
+var player_experience_level = 1
+var player_collected_experience = 0
+
+#GUI
+@onready var expBar =  get_node("%ExperienceBar")
+@onready var labelLevel = get_node("%LabelLevel")
+
+func _ready():
+	...
+	set_expbar(player_experience, calculate_experience_cap()) 
+
+func calculate_experience(gem_exp):
+	var exp_required = calculate_experience_cap() 
+	player_collected_experience += gem_exp 
+	if player_experience + player_collected_experience >= exp_required: 
+		player_collected_experience -= exp_required - player_experience 
+		player_experience_level += 1 #On level up notre niveau d'expérience
+		labelLevel.text = str("Level : ", player_experience_level)
+		player_experience = 0
+		exp_required = calculate_experience_cap() 
+		calculate_experience(0)
+	else:
+		player_experience += player_collected_experience #On met a jour l'experience de notre joeur
+		player_collected_experience = 0
+	set_expbar(player_experience, exp_required)
+	
+func calculate_experience_cap():
+	var exp_cap = player_experience_level
+	if player_experience_level < 20:
+		exp_cap = player_experience_level * 5 
+	elif player_experience_level < 40:
+		exp_cap = 95 + (player_experience - 19) * 8 
+	else:
+		exp_cap = 255 + (player_experience - 39) * 12 
+	return exp_cap
+
+func set_expbar(set_value = 1, set_max_value = 100):
+	expBar.value = set_value
+	expBar.max_value = set_max_value
+""
+```
+### 11.3. Update the enemy script :
+
+It will define how the gem will be spawn and the amount of xp for the kobold.
 
 ```GdScript
 ""
-#Tornado
-var tornado_level = 1
+@export var min_experience = 0
+@export var max_experience = 5
 
-func attack():
+@onready var lootBase = get_tree().get_first_node_in_group("loot")
+
+var exp_gem = preload("res://Object/experience_gem.tscn") 
+
+func death():
 	...
-	if tornado_level > 0:
-		if tornadoAttackTimer.is_stopped():
-			tornadoAttackTimer.start()
-
-func _on_tornado_attack_timer_timeout():
-	var tornado_attack = tornado.instantiate()
-	tornado_attack.position = position 
-	tornado_attack.last_movement = last_movement
-	tornado_attack.level = tornado_level
-	add_child(tornado_attack)
-	tornadoAttackTimer.wait_time = tornado_attack.cast_speed * (1-cast_speed)
-	tornadoAttackTimer.start()
+	var new_gem = exp_gem.instantiate() 
+	new_gem.global_position = global_position 
+	new_gem.experience = randi_range(min_experience, max_experience)
+	lootBase.call_deferred('add_child', new_gem)
+	
 ""
 ```
 
@@ -987,6 +1112,7 @@ func _on_tornado_attack_timer_timeout():
   - Thanks to tween we can change a property of a given node given a duration to accomplish this, giving the tween.tween_property(node, property, end_result, duration)
   - We can run multiple tween for the same node, by default they wwill run one after the other but we can run them simultany by setting create_tween().set_parallel(true). We use then .chain() if we want an exception to run not in parallel
   - The _trans define how the tween will comport itself during the duration [(here)](https://preview.redd.it/zdzhci8octp41.png?auto=webp&s=e26a297d816b53482ca2d0199ba71761fe54c3c7) for a good comportement visualization. By default SINE < CUBIC < QUINT
+  - Blue node = 2D, Green one = Graphical User Interface, Red one = 3D
 
 ## 7. Review/Missunderstanding : 
 	
