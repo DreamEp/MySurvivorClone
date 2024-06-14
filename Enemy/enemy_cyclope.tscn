@@ -1,21 +1,21 @@
-[gd_scene load_steps=12 format=3 uid="uid://dcj6q2hy4sgsy"]
+[gd_scene load_steps=12 format=3 uid="uid://cwqr4ajs6crs6"]
 
-[ext_resource type="Script" path="res://Ennemy/ennemy_kobold.gd" id="1_1tlyj"]
-[ext_resource type="Texture2D" uid="uid://cfmntal13rnke" path="res://Textures/Enemy/kolbold_weak.png" id="2_8ts2q"]
-[ext_resource type="PackedScene" uid="uid://fsamfoidamme" path="res://Utility/hit_box.tscn" id="3_f4xey"]
-[ext_resource type="PackedScene" uid="uid://c7ms1mfu38r5k" path="res://Utility/hurt_box.tscn" id="4_lkf13"]
-[ext_resource type="AudioStream" uid="uid://14pv1wkqgclx" path="res://Audio/SoundEffect/enemy_hit.ogg" id="5_q5yfy"]
+[ext_resource type="Script" path="res://Enemy/enemy.gd" id="1_tmfmf"]
+[ext_resource type="Texture2D" uid="uid://5lqbqr3wcvmr" path="res://Textures/Enemy/cyclops.png" id="2_mnsfw"]
+[ext_resource type="PackedScene" uid="uid://fsamfoidamme" path="res://Utility/hit_box.tscn" id="3_y4xau"]
+[ext_resource type="PackedScene" uid="uid://c7ms1mfu38r5k" path="res://Utility/hurt_box.tscn" id="4_ym5s5"]
+[ext_resource type="AudioStream" uid="uid://14pv1wkqgclx" path="res://Audio/SoundEffect/enemy_hit.ogg" id="5_p8uob"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_g7w8a"]
-radius = 5.0
-height = 20.0
+radius = 4.0
+height = 14.0
 
 [sub_resource type="Animation" id="Animation_l1ias"]
 length = 0.001
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("KoboldSprite2D:frame")
+tracks/0/path = NodePath("EnemySprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -32,7 +32,7 @@ loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
-tracks/0/path = NodePath("KoboldSprite2D:frame")
+tracks/0/path = NodePath("EnemySprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
@@ -49,28 +49,29 @@ _data = {
 }
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wk8b5"]
-size = Vector2(11, 25)
+size = Vector2(21, 24)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_7d7kl"]
-size = Vector2(17, 25)
+size = Vector2(32, 32)
 
-[node name="ennemy_kobold_weak_CharacterBody2D" type="CharacterBody2D"]
+[node name="enemy_cyclope" type="CharacterBody2D"]
 collision_layer = 4
 collision_mask = 4
 motion_mode = 1
-script = ExtResource("1_1tlyj")
+script = ExtResource("1_tmfmf")
+movemement_speed = 16
+health = 100
+enemy_damage = 5
+knockback_recovery = 10
+min_experience = 10
+max_experience = 13
 
-[node name="KoboldSprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_8ts2q")
+[node name="EnemySprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_mnsfw")
 hframes = 2
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="."]
-visible = false
-polygon = PackedVector2Array(-7, 15, -5, 13, -2, 13, -2, 11, -5, 11, -4, 3, -7, 5, -12, 3, -11, -1, -6, 2, -5, 0, -8, -1, -7, -7, 0, -10, 6, -7, 6, -2, 11, 1, 13, 7, 9, 7, 6, 7, 10, 15, 4, 15, 4, 13, 3, 11, -1, 11, -1, 15)
-disabled = true
-
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(1, 1)
+position = Vector2(-1, -1)
 shape = SubResource("CapsuleShape2D_g7w8a")
 
 [node name="walkAnimationPlayer" type="AnimationPlayer" parent="."]
@@ -78,22 +79,21 @@ libraries = {
 "": SubResource("AnimationLibrary_6lqkr")
 }
 
-[node name="HitBox" parent="." instance=ExtResource("3_f4xey")]
+[node name="HitBox" parent="." instance=ExtResource("3_y4xau")]
 collision_layer = 2
 
 [node name="CollisionShape2D" parent="HitBox" index="0"]
-position = Vector2(1.5, 2.5)
+position = Vector2(-0.5, 1)
 shape = SubResource("RectangleShape2D_wk8b5")
 
-[node name="HurtBox" parent="." instance=ExtResource("4_lkf13")]
+[node name="HurtBox" parent="." instance=ExtResource("4_ym5s5")]
 collision_mask = 4
 
 [node name="CollisionShape2D" parent="HurtBox" index="0"]
-position = Vector2(1.5, 3.5)
 shape = SubResource("RectangleShape2D_7d7kl")
 
 [node name="snd_hit" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("5_q5yfy")
+stream = ExtResource("5_p8uob")
 volume_db = -15.0
 
 [connection signal="hurt" from="HurtBox" to="." method="_on_hurt_box_hurt"]

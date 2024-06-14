@@ -1,10 +1,11 @@
 extends CharacterBody2D
 
-#So we can change the value of the variable directly from the right pannel on ennemy
+#So we can change the value of the variable directly from the right pannel on enemy
 @export var movemement_speed = 20
 @export var health = 10
+@export var enemy_damage = 1  #Base damage
 @export var knockback_recovery = 3 #Reduit le knockback
-@export var kobold_armor = 220
+@export var kobold_armor = 2
 @export var min_experience = 0 #Combien va nous fournir d'exp le kobold au minimum
 @export var max_experience = 5 #Combien va nous fournir d'exp le kobold au minimum
 
@@ -15,18 +16,20 @@ var kobold_current_sprite_color = self.modulate #"On recupere notre sprite intia
 #Here we take the first node of group player previously created
 @onready var player = get_tree().get_first_node_in_group("player")
 @onready var lootBase = get_tree().get_first_node_in_group("loot") #Fais référence au node Loot de world ici
-@onready var sprite2DKobold = $KoboldSprite2D
+@onready var EnemySprite2D = $EnemySprite2D
 @onready var walkAnimationPlayer = $walkAnimationPlayer
 @onready var snd_hit = $snd_hit
+@onready var hitBox = $HitBox
 
-var death_anim = preload("res://Ennemy/explosion.tscn") #Preload la scene de destruction
+var death_anim = preload("res://enemy/explosion.tscn") #Preload la scene de destruction
 var exp_gem = preload("res://Object/experience_gem.tscn") #Preload la scene gem
 
 signal remove_from_array(object) #Création d'un nouveau signal pour supprimer un objet d'un array, permet notamment de supprimer l'objet une fois qu'il a été queu_free
 
 func _ready():
 	walkAnimationPlayer.play("walk") #We created the walk animation in our animation player
-
+	hitBox.damage = enemy_damage
+	
 func _physics_process(_delta):
 	knockback = knockback.move_toward(Vector2.ZERO, knockback_recovery)
 	var direction = global_position.direction_to(player.global_position)
@@ -36,14 +39,14 @@ func _physics_process(_delta):
 	
 	#There we get a gap so it don't flip permanently
 	if direction.x > 0.1:
-		sprite2DKobold.flip_h = true
+		EnemySprite2D.flip_h = true
 	elif direction.x < 0.1:
-		sprite2DKobold.flip_h = false
+		EnemySprite2D.flip_h = false
 
 func death():
 	emit_signal("remove_from_array", self)
 	var enemy_death = death_anim.instantiate() #On instancie la death animation
-	enemy_death.scale = sprite2DKobold.scale #On scale sa taille sur celle du kobold
+	enemy_death.scale = EnemySprite2D.scale #On scale sa taille sur celle du kobold
 	enemy_death.global_position = global_position #On le position sur celle du kobold
 	get_parent().call_deferred("add_child", enemy_death) #Comme l'ennemi va disparaitre on va spawn l'explosion sur le parent explosion sachant qu'on a set sa position a global position de l'ennemi auparavant
 	var new_gem = exp_gem.instantiate() #On instancie une nouvelle gemme
@@ -55,8 +58,8 @@ func death():
 func _on_hurt_box_hurt(base_damage, angle, knockback_amount, armor_penetration, magic_penetration):
 	var damage_reduction = base_damage * (kobold_armor / (kobold_armor + 100))
 	var damage_augmentation = base_damage * ((armor_penetration / (armor_penetration + 100)) + (magic_penetration / (magic_penetration + 100)))
-	var damage = base_damage + damage_augmentation - damage_reduction
-	health -= damage #On fait des dégats au kobold avec les dmg
+	enemy_damage = base_damage + damage_augmentation - damage_reduction
+	health -= enemy_damage #On fait des dégats au kobold avec les dmg
 	knockback = angle * knockback_amount #Quand sa hurtbox est touché on applique le knockback si il y en a un
 	if health <= 0:
 		death()

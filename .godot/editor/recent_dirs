@@ -1,7 +1,8 @@
-res://Player/GUI
+res://TitleScreen
 res://Utility
+res://Enemy
+res://Player/GUI
 res://Object
 res://Player/Attacks
-res://Ennemy
 res://Player
 res://World

@@ -46,6 +46,12 @@
 	- [14. Create a timer, Health bar, and display the player Upgrade :](#14-create-a-timer-health-bar-and-display-the-player-upgrade-)
 		- [14.1. Create our new Texture upgrade node :](#141-create-our-new-texture-upgrade-node-)
 		- [14.2. Update the player script:](#142-update-the-player-script)
+		- [14.3. Update the enemySpawner script:](#143-update-the-enemyspawner-script)
+	- [15. Create our game menu, and handle win, lose or quit](#15-create-our-game-menu-and-handle-win-lose-or-quit)
+		- [15.1. Create our new button class :](#151-create-our-new-button-class-)
+		- [15.2. Create our menu scene](#152-create-our-menu-scene)
+		- [15.3. Update the player script:](#153-update-the-player-script)
+		- [15.4. Main sound script](#154-main-sound-script)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -168,15 +174,15 @@ func movement():
 
 We're working on the _physics_process function of our enemy
 ```GdScript
-@onready var sprite2DKobold = $KoboldSprite2D
+@onready var Sprite2D = $Sprite2D
 
 func _physics_process(_delta):
 
 ""
 	if direction.x > 0.1:
-		sprite2DKobold.flip_h = true
+		Sprite2D.flip_h = true
 	elif direction.x < 0.1:
-		sprite2DKobold.flip_h = false
+		Sprite2D.flip_h = false
 ""
 ```
 
@@ -565,7 +571,7 @@ We're adding the knockback variables and calculating the angle that will be retr
 var knockback = Vector2.ZERO
 @onready var walkAnimationPlayer = $walkAnimationPlayer
 @onready var snd_hit = $snd_hit
-var death_anim = preload("res://Ennemy/explosion.tscn")
+var death_anim = preload("res://enemy/explosion.tscn")
 
 signal remove_from_array(object)
 
@@ -602,7 +608,7 @@ func _physics_process(_delta):
 func death():
 	emit_signal("remove_from_array", self)
 	var enemy_death = death_anim.instantiate()
-	enemy_death.scale = sprite2DKobold.scale
+	enemy_death.scale = Sprite2D.scale
 	enemy_death.global_position = global_position
 	get_parent().call_deferred("add_child", enemy_death)
 	queue_free()
@@ -807,7 +813,7 @@ var base_return_speed = 20
 var long_return_speed = 100
 var damage = 5
 var knockback_amount = 100
-var max_ennemy_numbers_paths = 3 
+var max_enemy_numbers_paths = 3 
 var attack_area = 1.0
 var salve_attack_delay = 7.0
 var next_attack_delay = 3.0
@@ -845,7 +851,7 @@ func update_javelin():
 			bullet_speed = bullet_speed
 			damage = damage
 			knockback_amount = knockback_amount
-			max_ennemy_numbers_paths = max_ennemy_numbers_paths
+			max_enemy_numbers_paths = max_enemy_numbers_paths
 			attack_area = attack_area
 			salve_attack_delay = salve_attack_delay
 			next_attack_delay = next_attack_delay
@@ -855,7 +861,7 @@ func update_javelin():
 			bullet_speed = bullet_speed
 			damage = damage
 			knockback_amount = knockback_amount
-			max_ennemy_numbers_paths += 1
+			max_enemy_numbers_paths += 1
 			attack_area = attack_area
 			salve_attack_delay = salve_attack_delay	
 			next_attack_delay = next_attack_delay	
@@ -879,12 +885,12 @@ func _physics_process(delta):
 		position += player_angle * return_speed * delta 
 		rotation = global_position.direction_to(player.global_position).angle() + deg_to_rad(135) 
 
-func add_ennemy_numbers_paths():
+func add_enemy_numbers_paths():
 	snd_attack.play()
 	emit_signal("remove_from_array", self) 
 	target_array.clear()
 	var counter = 0
-	while counter < max_ennemy_numbers_paths: 
+	while counter < max_enemy_numbers_paths: 
 		var new_path = player.get_random_target() 
 		target_array.append(new_path) 
 	enable_attack(true) 
@@ -908,7 +914,7 @@ func enable_attack(atk = true):
 		sprite.texture = spr_jav_reg
 
 func _on_attack_timer_timeout():
-	add_ennemy_numbers_paths()
+	add_enemy_numbers_paths()
 
 func _on_change_direction_timeout():
 	if target_array.size() > 0:
@@ -1358,7 +1364,7 @@ func update_level(update_upgrade):
 
 ### 14.2. Update the player script:
 
-It will define how to create/update the box in our grid when we upgrade an item
+Here we will update the health bar and ppannel with our upgrade
 
 ```GdScript
 
@@ -1367,11 +1373,6 @@ It will define how to create/update the box in our grid when we upgrade an item
 @onready var collectedWeapons = get_node("%CollectedWeapons")
 @onready var collectedUpgrades = get_node("%CollectedUpgrades")
 @onready var itemContainer =  preload("res://Player/GUI/item_container.tscn")
-
-func _physics_process(delta):
-	movement()
-	pass_time += delta
-	change_time()
 
 func _on_hurt_box_hurt(damage, _angle, _knockback_amount, _amor_penetration, _magic_penetration):
 	...
@@ -1384,16 +1385,6 @@ func upgrade_character(upgrade):
 	...
 	adjust_gui_collection(upgrade)
 	...
-
-func change_time():
-	var time = int(pass_time)
-	var m = int(time / 60.0)
-	var s = time % 60
-	if m < 10:
-		m = str(0, m)
-	if s < 10:
-		s = str(0, s)
-	labelTimer.text = str(m, ":", s)
 
 func adjust_gui_collection(upgrade):
 	var get_upgraded_displayname = UpgradeDb.UPGRADES[upgrade]["displayname"] 
@@ -1422,6 +1413,134 @@ func adjust_gui_collection(upgrade):
 						if u.upgrade.substr(0, 3) == upgrade.substr(0, 3) and u.has_method("update_level"):
 							u.update_level(upgrade)
 ""
+```
+
+### 14.3. Update the enemySpawner script:
+
+It will define how the time is pass in our game, and how to spawn the enemy at correct time
+
+```GdScript
+var time = 0
+@export var pass_time = 0
+
+func _physics_process(delta):
+	pass_time += delta
+	change_time()
+
+func change_time():
+	var time = int(pass_time)
+	var m = int(time / 60.0)
+	var s = time % 60
+	if m < 10:
+		m = str(0, m)
+	if s < 10:
+		s = str(0, s)
+	labelTimer.text = str(m, ":", s)
+""
+```
+
+## 15. Create our game menu, and handle win, lose or quit 
+
+We are creating our menu logice
+
+- Create a new pannel node to handle the death of our player or win
+  - Create a label to it to display the message of win or lose
+  - Create the sound victory and lose too
+  - Create a new button node and set it to a scene
+    - Create the signal on button end to go to our menu scene
+    - Add the sounds to hit to handle hover and click effect
+    - Add a script too (15.1)
+- Create a new node UserInterface that will be our menu 
+  - Create a colorRect
+  - Create a label
+  - Import 2 buttons from previous scene and add the code to it (15.2)
+- Update the player script to handle is death or win
+- We then add an audio to our game in the world scene, set it to loop when importing the sound, and set it to always play even when pause (so it play even during levelup)
+- We add a signal to our player script called playerdeath (15.3)
+- Update the player code too
+- We then connect our player node from world scene to our audioplayer thanks to the signal previouslay created and we set the value playing = false (15.3)
+
+
+### 15.1. Create our new button class :
+
+It will define our menu buttons and how they works
+
+```GdScript
+extends Button
+
+signal click_end()
+
+func _on_mouse_entered():
+	$snd_hover.play()
+
+func _on_pressed():
+	$snd_click.play()
+
+func _on_snd_click_finished():
+	emit_signal("click_end")
+```
+
+### 15.2. Create our menu scene
+
+That will define our menu scene
+
+```GdScript
+extends Control
+
+var level = "res://World/world.tscn"
+
+func _on_btn_play_click_end():
+	var _level = get_tree().change_scene_to_file(level)
+
+func _on_btn_exit_click_end():
+	get_tree().quit()
+""
+```
+
+### 15.3. Update the player script:
+
+It will define how to handle the death, or win of the player + the sound
+
+```GdScript
+#Signal
+signal playerdeath
+
+if player_health <= 0:
+		death()
+	else:
+		$snd_hit.play()
+
+func death():
+	deathPanel.visible = true
+	emit_signal("playerdeath")
+	get_tree().paused = true
+	var tween = deathPanel.create_tween()
+	tween.tween_property(deathPanel, "position", Vector2(220, 50), 3.0).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	tween.play()
+	var spawner = get_tree().get_first_node_in_group("spawner")
+	if spawner.time >= 300:
+		labelResult.text = "YOU WIN !"
+		sndVictory.play()
+	else:
+		labelResult.text = "YOU LOSE ..."
+		sndLose.play()
+
+func _on_btn_menu_click_end():
+	get_tree().paused = false
+	var _level = get_tree().change_scene_to_file("res://TitleScreen/menu.tscn")
+""
+```
+
+### 15.4. Main sound script
+
+It will stop the sound when the player his death thanks to a signal
+
+```GdScript
+extends AudioStreamPlayer
+
+func _on_player_character_body_2d_playerdeath():
+	playing = false
+
 ```
 
 ## 5. General Settings : 
@@ -1458,6 +1577,7 @@ func adjust_gui_collection(upgrade):
   - The _trans define how the tween will comport itself during the duration [(here)](https://preview.redd.it/zdzhci8octp41.png?auto=webp&s=e26a297d816b53482ca2d0199ba71761fe54c3c7) for a good comportement visualization. By default SINE < CUBIC < QUINT
 - Blue node = 2D, Green one = Graphical User Interface, Red one = 3D
 - The pause mechanics is defined in each of the node in Process Mode, we can change here how the pause will process the node. We can set to inherit all the child so they act like the parent.
+- We can change the default scene in project settings run and set it to our menu pannel for exemple.
 
 
 ## 7. Review/Missunderstanding : 

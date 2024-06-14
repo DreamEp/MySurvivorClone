@@ -15,7 +15,6 @@ var player_additional_attacks = 0
 
 var player_last_movement = Vector2.UP #Recupère notre précédent mouvement
 var player_current_sprite_color = self.modulate #"On recupere notre sprite intial"
-var pass_time = 0
 
 #Attacks
 var iceSpear = preload("res://Player/Attacks/ice_spear.tscn")
@@ -41,7 +40,7 @@ var tornado_level = 0
 var javelin_level = 0
 var javelin_max_spawns_limit = 1
 
-#Ennemy related
+#enemy related
 var enemy_close = []
 
 #Experience
@@ -58,23 +57,30 @@ var upgrade_options = [] #Les options d'upgrade proposé a notre personnage qu'i
 
 #GUI
 @onready var expBar =  get_node("%ExperienceBar")
+@onready var healthBar = get_node("%HealthBar")
+@onready var labelTimer = get_node("%LabelTimer")
 @onready var labelLevel = get_node("%LabelLevel")
 @onready var levelPanel = get_node("%LevelUp")
 @onready var sndLevelUp = get_node("%snd_levelup")
-@onready var healthBar = get_node("%HealthBar")
-@onready var labelTimer = get_node("%LabelTimer")
-@onready var collectedWeapons = get_node("%CollectedWeapons")
-@onready var collectedUpgrades = get_node("%CollectedUpgrades")
-@onready var itemContainer =  preload("res://Player/GUI/item_container.tscn")
-
 @onready var upgradeOptions = get_node("%UpgradeOption")
 @onready var itemOptions = preload("res://Utility/item_option.tscn")
+@onready var itemContainer =  preload("res://Player/GUI/item_container.tscn")
+@onready var collectedWeapons = get_node("%CollectedWeapons")
+@onready var collectedUpgrades = get_node("%CollectedUpgrades")
+@onready var deathPanel = get_node("%DeathPanel")
+@onready var labelResult = get_node("%LabelResult")
+@onready var sndVictory = get_node("%snd_victory")
+@onready var sndLose= get_node("%snd_lose")
+
+#Signal
+signal playerdeath
 
 #Se lance dès la première frame
 func _ready():
+	upgrade_character("icespear1")
 	attack()
 	set_expbar(player_experience, calculate_experience_cap())
-	_on_hurt_box_hurt(0, 0, 0, 0, 0)
+	set_healthbar(player_health, player_max_health)
 	
 #Fonction custom pour créer notre mouvement
 func movement():
@@ -115,10 +121,8 @@ func attack():
 				
 #Function nécéssaire pour que Godot interprete la physique du personnage
 #Run automatique toutes les 1/60 seconds | delta = une seconde/frame rate (permet de se déplacer aussi rapidement selon le frame rate)
-func _physics_process(delta):
+func _physics_process(_delta):
 	movement()
-	pass_time += delta
-	change_time()
 
 func _on_hurt_box_hurt(damage, _angle, _knockback_amount, _amor_penetration, _magic_penetration):
 	var damage_reduction = damage * (player_armor / (player_armor + 100)) #revoir la réduction de dégat
@@ -130,6 +134,10 @@ func _on_hurt_box_hurt(damage, _angle, _knockback_amount, _amor_penetration, _ma
 	tween_color.tween_property(self, "modulate", player_current_sprite_color, 0.2).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT) #Puis celle-ci revient à la normale
 	tween_color.play()
 	print("hp : " + str(player_health) + " | damage : " + str(damage))
+	if player_health <= 0:
+		death()
+	else:
+		$snd_hit.play()
 
 #Chargement des munitions
 func _on_ice_spear_timer_timeout():
@@ -230,7 +238,11 @@ func calculate_experience_cap():
 func set_expbar(set_value = 1, set_max_value = 100):
 	expBar.value = set_value
 	expBar.max_value = set_max_value
-
+	
+func set_healthbar(set_value = 80, set_max_value = 80):
+	healthBar.max_value = set_max_value
+	healthBar.value = set_value
+	
 #Function qui gère le menu d'affichage quand on level up (GUI)
 func levelup():
 	sndLevelUp.play() #On joue le son de level up
@@ -325,17 +337,6 @@ func get_random_item():
 	else:
 		return null
 
-#On calcule ici le temps pour l'afficher dans notre jeux	
-func change_time():
-	var time = int(pass_time)
-	var m = int(time / 60.0)
-	var s = time % 60
-	if m < 10:
-		m = str(0, m)
-	if s < 10:
-		s = str(0, s)
-	labelTimer.text = str(m, ":", s)
-
 #Permet d'avoir les améliorations et armes qu'on a déjà récupéré
 func adjust_gui_collection(upgrade):
 	var get_upgraded_displayname = UpgradeDb.UPGRADES[upgrade]["displayname"] #Permet de récupérer de la db le displayname de l'upgrade
@@ -364,4 +365,23 @@ func adjust_gui_collection(upgrade):
 					for u in current_upgrades: 
 						if u.upgrade.substr(0, 3) == upgrade.substr(0, 3) and u.has_method("update_level"):
 							u.update_level(upgrade)
-	
+
+#Permet d'afficher le résultat en cas de mort	
+func death():
+	deathPanel.visible = true #On rend alors le panneau de mort visible
+	emit_signal("playerdeath") #Quand le joeuur meurt on emet un signal vers notre main musique pour l'arreter
+	get_tree().paused = true #On met en pause le jeux
+	var tween = deathPanel.create_tween()
+	tween.tween_property(deathPanel, "position", Vector2(220, 50), 3.0).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+	tween.play()
+	var spawner = get_tree().get_first_node_in_group("spawner") #Ici on recupere la scene enemy_spawner ou le temps est indiqué
+	if spawner.time >= 300:
+		labelResult.text = "YOU WIN !"
+		sndVictory.play()
+	else:
+		labelResult.text = "YOU LOSE ..."
+		sndLose.play()
+
+func _on_btn_menu_click_end():
+	get_tree().paused = false
+	var _level = get_tree().change_scene_to_file("res://TitleScreen/menu.tscn")

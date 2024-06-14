@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://c5tcap4uscyqt"]
 
-[ext_resource type="Texture2D" uid="uid://c14yb0kof0m3j" path="res://Textures/Enemy/explosion_pixelfied.png" id="1_y6lkh"]
-[ext_resource type="AudioStream" uid="uid://d2pnp6yp4s605" path="res://Audio/SoundEffect/enemy_death.ogg" id="2_b0ans"]
-[ext_resource type="Script" path="res://Ennemy/explosion.gd" id="2_joe78"]
+[ext_resource type="Texture2D" uid="uid://c14yb0kof0m3j" path="res://Textures/Enemy/explosion_pixelfied.png" id="1_irv2m"]
+[ext_resource type="Script" path="res://Enemy/explosion.gd" id="2_ckqcc"]
+[ext_resource type="AudioStream" uid="uid://d2pnp6yp4s605" path="res://Audio/SoundEffect/enemy_death.ogg" id="3_un1k6"]
 
 [sub_resource type="Animation" id="Animation_f61o0"]
 length = 0.001
@@ -44,13 +44,13 @@ _data = {
 
 [node name="Explosion" type="Sprite2D"]
 z_index = 1
-texture = ExtResource("1_y6lkh")
+texture = ExtResource("1_irv2m")
 hframes = 4
 vframes = 4
-script = ExtResource("2_joe78")
+script = ExtResource("2_ckqcc")
 
 [node name="snd_explosion" type="AudioStreamPlayer2D" parent="."]
-stream = ExtResource("2_b0ans")
+stream = ExtResource("3_un1k6")
 volume_db = -5.0
 pitch_scale = 0.5
 autoplay = true

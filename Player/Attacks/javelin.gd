@@ -8,7 +8,7 @@ var long_return_speed = 200
 var max_distance_from_player = 100
 var damage = 5
 var knockback_amount = 100
-var max_ennemy_numbers_paths = 3 #Nombre d'ennemies sur lesquels enchainés / ou bounce
+var max_enemy_numbers_paths = 3 #Nombre d'ennemies sur lesquels enchainés / ou bounce
 var attack_area = 1.0
 var salve_attack_delay = 5.0
 var next_attack_delay = 1.5
@@ -50,7 +50,7 @@ func update_javelin():
 			max_distance_from_player = max_distance_from_player
 			damage = damage
 			knockback_amount = knockback_amount
-			max_ennemy_numbers_paths = max_ennemy_numbers_paths
+			max_enemy_numbers_paths = max_enemy_numbers_paths
 			attack_area = attack_area
 			salve_attack_delay = salve_attack_delay
 			next_attack_delay = next_attack_delay
@@ -58,15 +58,15 @@ func update_javelin():
 		2:
 			bullet_speed += (level * 5)
 			knockback_amount += (level * 100)
-			max_ennemy_numbers_paths += 1
+			max_enemy_numbers_paths += 1
 		3:
 			bullet_speed += (level * 5)
 			knockback_amount += (level * 100)
-			max_ennemy_numbers_paths += 1
+			max_enemy_numbers_paths += 1
 		4:
 			bullet_speed += (level * 5)
 			knockback_amount += (level * 100)
-			max_ennemy_numbers_paths += 1
+			max_enemy_numbers_paths += 1
 		5:
 			bullet_speed += (level * 5)
 			knockback_amount += (level * 100)
@@ -93,12 +93,12 @@ func _physics_process(delta):
 		rotation = global_position.direction_to(player.global_position).angle() + deg_to_rad(135) #On rotate le javelot dans la bonne direction du joueur
 		
 #Cette fonction permet d'ajouter des ennemies a notre tableau d'ennemie afin d'atteindre le max d'ennemi 
-func add_ennemy_numbers_paths():
+func add_enemy_numbers_paths():
 	snd_attack.play()
 	emit_signal("remove_from_array", self) #On supprime de l'array cet ennemi pour pouvoir le retoucher par la suite
 	target_array.clear() #We clear the target array
 	var counter = 0
-	while counter < max_ennemy_numbers_paths: #Tant qu'on a pas atteint le nombre max d'ennemi a traverser
+	while counter < max_enemy_numbers_paths: #Tant qu'on a pas atteint le nombre max d'ennemi a traverser
 		var new_path = player.get_random_target() #On target un random ennemi en range
 		target_array.append(new_path) #On ajoute cet ennemi a notre tableau
 		counter += 1 #On incrémente le compteur
@@ -126,7 +126,7 @@ func enable_attack(atk = true):
 
 #Quand la volée d'attaque est terminé on ajoute de nouveau des ennemis
 func _on_attack_timer_timeout():
-	add_ennemy_numbers_paths()
+	add_enemy_numbers_paths()
 
 #Quand le timer du changement de direction est terminé
 func _on_change_direction_timeout():

@@ -9,4 +9,3 @@ func _ready():
 
 func update_level(update_upgrade):
 	$LabelItemNumber.text = UpgradeDb.UPGRADES[update_upgrade]["level"]
-	

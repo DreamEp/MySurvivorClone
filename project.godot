@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Survivors Clone"
-run/main_scene="res://World/world.tscn"
+run/main_scene="res://TitleScreen/menu.tscn"
 config/features=PackedStringArray("4.2", "Mobile")
 config/icon="res://icon.svg"
 
@@ -23,6 +23,7 @@ UpgradeDb="*res://Utility/upgrade_db.tscn"
 
 window/size/viewport_width=640
 window/size/viewport_height=360
+window/size/mode=3
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
@@ -54,7 +55,7 @@ right={
 
 2d_physics/layer_1="World"
 2d_physics/layer_2="Player"
-2d_physics/layer_3="Ennemy"
+2d_physics/layer_3="enemy"
 2d_physics/layer_4="Loot"
 
 [rendering]

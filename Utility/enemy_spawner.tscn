@@ -2,13 +2,13 @@
 
 [ext_resource type="Script" path="res://Utility/enemy_spawner.gd" id="1_mmsm8"]
 [ext_resource type="Script" path="res://Utility/spawn_info.gd" id="2_07dby"]
-[ext_resource type="PackedScene" uid="uid://dcj6q2hy4sgsy" path="res://Ennemy/ennemy_kobold_weak.tscn" id="2_tqk7n"]
+[ext_resource type="PackedScene" uid="uid://dcj6q2hy4sgsy" path="res://Enemy/enemy_kobold_weak.tscn" id="2_tqk7n"]
 
 [sub_resource type="Resource" id="Resource_m8yyp"]
 script = ExtResource("2_07dby")
 time_start = 0
 time_end = 60
-ennemy = ExtResource("2_tqk7n")
+enemy = ExtResource("2_tqk7n")
 enemy_num = 1
 enemy_spawn_delay = 1
 

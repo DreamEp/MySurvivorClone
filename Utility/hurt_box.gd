@@ -43,7 +43,7 @@ func _on_area_entered(area_entering):
 			if area_entering.get("magic_penetration") != null:
 				magic_penetration = area_entering.magic_penetration
 			emit_signal("hurt", damage, angle, knockback, armor_penetration, magic_penetration) #Ici on émet notre signal custom avec les dommages, dans notre cas lorsque on entre dans la zone hurtbox
-			if area_entering.has_method("enemy_hit"): #Si la personne/projectile qui entre dans l'area a une méthode ennemy hit
+			if area_entering.has_method("enemy_hit"): #Si la personne/projectile qui entre dans l'area a une méthode enemy hit
 				area_entering.enemy_hit(1) #On call cette méthode
 
 func remove_from_list(object):
