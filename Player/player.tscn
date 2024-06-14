@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://165n5brcy33j"]
+[gd_scene load_steps=15 format=3 uid="uid://165n5brcy33j"]
 
 [ext_resource type="Script" path="res://Player/player.gd" id="1_tmjtd"]
 [ext_resource type="Texture2D" uid="uid://btaqguqmffdas" path="res://Textures/Player/player_sprite.png" id="1_wa51t"]
@@ -7,6 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://b5ktf4muog3uw" path="res://Textures/GUI/exp_progress.png" id="5_n77p8"]
 [ext_resource type="FontFile" uid="uid://dfk2j1o6hwrxn" path="res://Font/tenderness.otf" id="6_2agyd"]
 [ext_resource type="AudioStream" uid="uid://ctiqpk04njl1" path="res://Audio/SoundEffect/levelup.ogg" id="7_2viqg"]
+[ext_resource type="Texture2D" uid="uid://bncu56kiv88o4" path="res://Textures/GUI/healthbar.png" id="7_xaoo0"]
+[ext_resource type="Texture2D" uid="uid://ccb707t3c1q3e" path="res://Textures/GUI/health.png" id="8_dhj17"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8lc7i"]
 radius = 5.0
@@ -63,6 +65,7 @@ shape = SubResource("RectangleShape2D_2f1be")
 [node name="IceSpearReloadTimer" type="Timer" parent="Attacks_Node2D"]
 unique_name_in_owner = true
 wait_time = 1.5
+one_shot = true
 
 [node name="IceSpearAttackTimer" type="Timer" parent="Attacks_Node2D/IceSpearReloadTimer"]
 unique_name_in_owner = true
@@ -108,21 +111,38 @@ offset_bottom = 360.0
 [node name="ExperienceBar" type="TextureProgressBar" parent="GUILayer/GUI"]
 unique_name_in_owner = true
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_left = 15.0
+offset_top = 350.0
+offset_right = 655.0
+offset_bottom = 370.0
+scale = Vector2(0.95, 0.25)
+value = 50.0
 texture_under = ExtResource("4_ar0s7")
 texture_progress = ExtResource("5_n77p8")
+tint_progress = Color(0.553145, 0.737684, 0, 1)
 
 [node name="LabelLevel" type="Label" parent="GUILayer/GUI/ExperienceBar"]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 10.0
+offset_top = -10.0
 offset_right = 110.0
-offset_bottom = 20.0
+offset_bottom = 10.0
+scale = Vector2(1.05, 1.75)
 theme_override_fonts/font = ExtResource("6_2agyd")
 theme_override_font_sizes/font_size = 16
 text = "Level:1"
 vertical_alignment = 2
+
+[node name="HealthBar" type="TextureProgressBar" parent="GUILayer/GUI"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 304.0
+offset_top = 200.0
+offset_right = 336.0
+offset_bottom = 208.0
+texture_over = ExtResource("7_xaoo0")
+texture_progress = ExtResource("8_dhj17")
 
 [node name="LevelUp" type="Panel" parent="GUILayer/GUI"]
 unique_name_in_owner = true
@@ -154,6 +174,38 @@ offset_bottom = 100.0
 unique_name_in_owner = true
 stream = ExtResource("7_2viqg")
 volume_db = -25.0
+
+[node name="LabelTimer" type="Label" parent="GUILayer/GUI"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 280.0
+offset_top = 14.0
+offset_right = 360.0
+offset_bottom = 38.0
+theme_override_fonts/font = ExtResource("6_2agyd")
+theme_override_font_sizes/font_size = 20
+text = "00 : 00
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CollectedWeapons" type="GridContainer" parent="GUILayer/GUI"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 8.0
+offset_top = 2.0
+offset_right = 208.0
+offset_bottom = 18.0
+columns = 10
+
+[node name="CollectedUpgrades" type="GridContainer" parent="GUILayer/GUI"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 8.0
+offset_top = 18.0
+offset_right = 208.0
+offset_bottom = 34.0
+columns = 10
 
 [connection signal="hurt" from="HurtBox" to="." method="_on_hurt_box_hurt"]
 [connection signal="timeout" from="Attacks_Node2D/IceSpearReloadTimer" to="." method="_on_ice_spear_timer_timeout"]

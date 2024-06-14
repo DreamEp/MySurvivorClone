@@ -7,6 +7,9 @@ var bullet_speed = 100
 var damage = 5
 var knockback_amount = 100
 var attack_area = 1.0
+var ammo = 0
+var baseammo = 2
+var reloadspeed = 3
 
 var target = Vector2.ZERO
 var angle = Vector2.ZERO
@@ -27,13 +30,22 @@ func _ready():
 			damage = damage
 			knockback_amount = knockback_amount
 			attack_area = attack_area
-		2:
+			ammo = ammo
+			baseammo = baseammo
+			reloadspeed = reloadspeed
+		2:			
 			pierce += 1
-			attack_speed = attack_speed
-			bullet_speed = bullet_speed
 			damage += 1
-			knockback_amount = knockback_amount
-			attack_area = attack_area
+		3:			
+			baseammo += 1
+			damage += 1
+		4:			
+			pierce += 1
+			damage += 1
+		5:			
+			baseammo += 1
+			damage += 1
+			
 	#Permet de créer un effet sur le projectile ici		
 	var tween = create_tween()
 	#On change la valeur scale du node parent en multipliant un vecteur 1,1 par l'area du projectile est en disant que celui ci grossis en 3 sec, avec un effet ease_out

@@ -10,8 +10,8 @@ res://Ennemy/ennemy_kobold.tscn
 res://Player/Attacks/tornado.tscn
 res://Player/Attacks/javelin.tscn
 res://Object/experience_gem.tscn
-res://Ennemy/ennemy_kobold.gd
-res://Player/Attacks/tornado.gd
 res://Utility/item_option.tscn
-res://Utility/item_option.gd
+res://Utility/upgrade_db.tscn
 res://Player/Attacks/javelin.gd
+res://Player/GUI/item_container.gd
+res://Player/GUI/item_container.tscn

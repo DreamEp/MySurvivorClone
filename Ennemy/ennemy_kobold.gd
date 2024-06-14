@@ -4,6 +4,7 @@ extends CharacterBody2D
 @export var movemement_speed = 20
 @export var health = 10
 @export var knockback_recovery = 3 #Reduit le knockback
+@export var kobold_armor = 220
 @export var min_experience = 0 #Combien va nous fournir d'exp le kobold au minimum
 @export var max_experience = 5 #Combien va nous fournir d'exp le kobold au minimum
 
@@ -51,7 +52,10 @@ func death():
 	lootBase.call_deferred('add_child', new_gem) #On ajoute la gemme sur notre node world/loot
 	queue_free() #On supprime l'ennemi si sa vie = 0
 
-func _on_hurt_box_hurt(damage, angle, knockback_amount):
+func _on_hurt_box_hurt(base_damage, angle, knockback_amount, armor_penetration, magic_penetration):
+	var damage_reduction = base_damage * (kobold_armor / (kobold_armor + 100))
+	var damage_augmentation = base_damage * ((armor_penetration / (armor_penetration + 100)) + (magic_penetration / (magic_penetration + 100)))
+	var damage = base_damage + damage_augmentation - damage_reduction
 	health -= damage #On fait des dégats au kobold avec les dmg
 	knockback = angle * knockback_amount #Quand sa hurtbox est touché on applique le knockback si il y en a un
 	if health <= 0:

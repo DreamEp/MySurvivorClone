@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://7bnnalbja1l" path="res://Textures/dirt_full_new.png" id="1_cqh15"]
 [ext_resource type="PackedScene" uid="uid://165n5brcy33j" path="res://Player/player.tscn" id="2_vhhdp"]
 [ext_resource type="PackedScene" uid="uid://c07cgu1tlkx7g" path="res://Utility/enemy_spawner.tscn" id="3_3h8o4"]
-[ext_resource type="PackedScene" uid="uid://dcj6q2hy4sgsy" path="res://Ennemy/ennemy_kobold.tscn" id="3_oaxgs"]
+[ext_resource type="PackedScene" uid="uid://dcj6q2hy4sgsy" path="res://Ennemy/ennemy_kobold_weak.tscn" id="3_oaxgs"]
 [ext_resource type="Script" path="res://Utility/spawn_info.gd" id="5_u7ovw"]
 [ext_resource type="PackedScene" uid="uid://dlatijr1u20xu" path="res://Object/experience_gem.tscn" id="6_e4jux"]
 
@@ -43,4 +43,8 @@ spawns = Array[ExtResource("5_u7ovw")]([SubResource("Resource_0teqk"), SubResour
 
 [node name="ExperienceGem" parent="Loot" instance=ExtResource("6_e4jux")]
 position = Vector2(69, -49)
+experience = 30
+
+[node name="ExperienceGem2" parent="Loot" instance=ExtResource("6_e4jux")]
+position = Vector2(1, -79)
 experience = 30

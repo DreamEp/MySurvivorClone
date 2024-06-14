@@ -2,11 +2,12 @@ extends Area2D
 
 var level = 1
 var pierce = 999 #Une valeur de pierce = 1, se comporte normalement
-var cast_speed = 3
+var coldown = 3
 var base_bullet_speed = 20
 var final_bullet_speed = 80
 var damage = 2
 var attack_area = 1.2
+var knockback_amount = 100
 
 var tween_change_direction_time =  3
 var tween_change_size_time = 3
@@ -25,19 +26,30 @@ signal remove_from_array(object)
 func _ready():
 	match level:
 		1:
-			pierce = pierce
-			cast_speed = cast_speed
+			pierce = pierce #Une valeur de pierce = 1, se comporte normalement
+			coldown = coldown
 			base_bullet_speed = base_bullet_speed
-			final_bullet_speed *= 3
+			final_bullet_speed = final_bullet_speed
 			damage = damage
 			attack_area = attack_area
+			knockback_amount = knockback_amount
 		2:
-			pierce = pierce 
-			cast_speed = cast_speed
-			base_bullet_speed *= base_bullet_speed
-			final_bullet_speed *= 4
-			damage += damage
+			final_bullet_speed += 20
 			attack_area += 0.2
+		3:
+			final_bullet_speed += 20
+			coldown -= 0.3
+			attack_area += 0.4
+			knockback_amount += 150
+		4:
+			base_bullet_speed *= 2
+			final_bullet_speed *= 30
+			knockback_amount += 200
+		5:
+			coldown -= 0.3
+			attack_area += 1
+			knockback_amount += 550
+				
 	var move_to_less = Vector2.ZERO
 	var move_to_more = Vector2.ZERO
 	match player_last_movement: #Match ici le dernier mouvement de notre joueur

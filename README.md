@@ -39,7 +39,13 @@
 		- [11.3. Update the enemy script :](#113-update-the-enemy-script-)
 	- [12. Manage GUI leveling:](#12-manage-gui-leveling)
 		- [12.1. Create our new button scene for our option/upgrade :](#121-create-our-new-button-scene-for-our-optionupgrade-)
-		- [11.2. Update the player script:](#112-update-the-player-script-1)
+		- [12.2. Update the player script:](#122-update-the-player-script)
+	- [13. Manage upgrade of our Player :](#13-manage-upgrade-of-our-player-)
+		- [13.1. Create our new button scene for our option/upgrade :](#131-create-our-new-button-scene-for-our-optionupgrade-)
+		- [13.2. Update the player script:](#132-update-the-player-script)
+	- [14. Create a timer, Health bar, and display the player Upgrade :](#14-create-a-timer-health-bar-and-display-the-player-upgrade-)
+		- [14.1. Create our new Texture upgrade node :](#141-create-our-new-texture-upgrade-node-)
+		- [14.2. Update the player script:](#142-update-the-player-script)
 	- [5. General Settings :](#5-general-settings-)
 	- [6. Lessons :](#6-lessons-)
 	- [7. Review/Missunderstanding :](#7-reviewmissunderstanding-)
@@ -1150,7 +1156,7 @@ func _on_snd_collected_finished():
 ""
 ```
 
-### 11.2. Update the player script:
+### 12.2. Update the player script:
 
 It will define how to handle the level up, tha pause of the game and the gui.
 
@@ -1192,6 +1198,229 @@ func upgrade_character(upgrade):
 	levelPanel.position = Vector2(800, 50) 
 	get_tree().paused = false 
 	calculate_experience(0) 
+""
+```
+
+## 13. Manage upgrade of our Player : 
+
+We are creating our upgrade logic & database
+
+- Create a new scene from a basic node2D that will be our upgradeDB
+- Add in project setting autoload the upgradeDB.tscn file, that will make it available everywhere in our project
+-  Update our player script
+
+### 13.1. Create our new button scene for our option/upgrade :
+
+It will define our database to upgrade our player
+
+```GdScript
+extends Node
+
+const ICON_PATH = "res://Textures/Items/Upgrades/"
+const WEAPON_PATH = "res://Textures/Items/Weapons/"
+const UPGRADES = {
+	"icespear1": {
+		"icon": WEAPON_PATH + "ice_spear.png",
+		"displayname": "Ice Spear",
+		"details": "A spear of ice is thrown at a random enemy",
+		"level": "Level: 1",
+		"prerequisite": [],
+		"type": "weapon"
+	},
+	"icespear2": {
+		"icon": WEAPON_PATH + "ice_spear.png",
+		"displayname": "Ice Spear",
+		"details": "An addition Ice Spear is thrown",
+		"level": "Level: 2",
+		"prerequisite": ["icespear1"],
+		"type": "weapon"
+	}
+	"""
+}
+
+```
+
+### 13.2. Update the player script:
+
+It will define how to handle the upgrade choice.
+
+```GdScript
+func levelup():
+	...
+	while options < optionsmax: 
+		option_choice.item = get_random_item() 
+	..
+
+func upgrade_character(upgrade):
+	match upgrade:
+		"icespear1":
+			icespear_level = 1
+		"icespear2":
+			icespear_level = 2
+		"icespear3":
+			icespear_level = 3
+		"icespear4":
+			icespear_level = 4
+		"tornado1":
+			tornado_level = 1
+		"tornado2":
+			tornado_level = 2
+		"tornado3":
+			tornado_level = 3
+		"tornado4":
+			tornado_level = 4
+		"javelin1":
+			javelin_level = 1
+		"javelin2":
+			javelin_level = 2
+		"javelin3":
+			javelin_level = 3
+		"javelin4":
+			javelin_level = 4
+		"armor1","armor2","armor3","armor4":
+			player_armor += 1
+		"speed1","speed2","speed3","speed4":
+			player_movement_speed += 20.0
+		"tome1","tome2","tome3","tome4":
+			player_attack_area += 0.10
+		"scroll1","scroll2","scroll3","scroll4":
+			player_coldown_reduction += 0.05
+		"ring1","ring2":
+			player_additional_attacks += 1
+		"food":
+			player_health += 20
+			player_health = clamp(player_health, 0, player_max_health)
+	#adjust_gui_collection(upgrade)
+	var option_children = upgradeOptions.get_children()
+	for i in option_children: 
+		i.queue_free() 
+	upgrade_options.clear() 
+	collected_upgrades.append(upgrade)
+	levelPanel.visible = false 
+	levelPanel.position = Vector2(800, 50) 
+	attack()	
+	get_tree().paused = false 
+	calculate_experience(0) 
+	
+func get_random_item():
+	var dblist = []
+	for i in UpgradeDb.UPGRADES:
+		if i in collected_upgrades: #Si on a déjà trouvé l'upgrade
+			pass
+		elif i in upgrade_options: #Si l'upgrade est déjà ajouté en option
+			pass
+		elif UpgradeDb.UPGRADES[i]["type"] == "item":
+			pass 
+		elif UpgradeDb.UPGRADES[i]["prerequisite"].size() > 0: 
+			var to_add = true 
+			for u in UpgradeDb.UPGRADES[i]["prerequisite"]: 
+				if not u in collected_upgrades: 
+					to_add = false 
+			if to_add: 
+				dblist.append(i) 
+		else:
+			dblist.append(i) 
+	if dblist.size() > 0: 
+		var randomitem = dblist.pick_random() 
+		upgrade_options.append(randomitem) 
+		return randomitem 
+	else:
+		return null
+""
+```
+
+## 14. Create a timer, Health bar, and display the player Upgrade : 
+
+We are creating our upgrade logic & database
+
+- Create a new TextureRect scene (container)
+  - Create a new TextureRect node (itemtexture)
+- In our player scene:
+  - Add 2 grid container and set their columns to 10
+
+### 14.1. Create our new Texture upgrade node :
+
+It will define our box for an upgrade to display
+
+```GdScript
+extends TextureRect
+
+var upgrade = null
+
+func _ready():
+	if upgrade != null:
+		$ItemTexture.texture = load(UpgradeDb.UPGRADES[upgrade]["icon"])
+		$LabelItemNumber.text = UpgradeDb.UPGRADES[upgrade]["level"]
+
+func update_level(update_upgrade):
+	$LabelItemNumber.text = UpgradeDb.UPGRADES[update_upgrade]["level"]
+```
+
+### 14.2. Update the player script:
+
+It will define how to create/update the box in our grid when we upgrade an item
+
+```GdScript
+
+@onready var healthBar = get_node("%HealthBar")
+@onready var labelTimer = get_node("%LabelTimer")
+@onready var collectedWeapons = get_node("%CollectedWeapons")
+@onready var collectedUpgrades = get_node("%CollectedUpgrades")
+@onready var itemContainer =  preload("res://Player/GUI/item_container.tscn")
+
+func _physics_process(delta):
+	movement()
+	pass_time += delta
+	change_time()
+
+func _on_hurt_box_hurt(damage, _angle, _knockback_amount, _amor_penetration, _magic_penetration):
+	...
+	player_health -= clamp(damage - damage_reduction, 1.0, 999.0)
+	healthBar.max_value = player_max_health
+	healthBar.value = player_health
+	...
+
+func upgrade_character(upgrade):
+	...
+	adjust_gui_collection(upgrade)
+	...
+
+func change_time():
+	var time = int(pass_time)
+	var m = int(time / 60.0)
+	var s = time % 60
+	if m < 10:
+		m = str(0, m)
+	if s < 10:
+		s = str(0, s)
+	labelTimer.text = str(m, ":", s)
+
+func adjust_gui_collection(upgrade):
+	var get_upgraded_displayname = UpgradeDb.UPGRADES[upgrade]["displayname"] 
+	var get_type = UpgradeDb.UPGRADES[upgrade]["type"] 
+	if get_type != "item": 
+		var get_collected_displaynames = []
+		for i in collected_upgrades:
+			get_collected_displaynames.append(UpgradeDb.UPGRADES[i]["displayname"]) 
+			var new_item = itemContainer.instantiate() 
+			new_item.upgrade = upgrade
+			match get_type: 
+				"weapon":
+					collectedWeapons.add_child(new_item)
+				"upgrade":
+					collectedUpgrades.add_child(new_item)
+		else:			
+			match get_type: 
+				"weapon":
+					var current_weapons = collectedWeapons.get_children()
+					for w in current_weapons: 
+						if w.upgrade.substr(0, 3) == upgrade.substr(0, 3) and w.has_method("update_level"):
+							w.update_level(upgrade)
+				"upgrade":
+					var current_upgrades = collectedUpgrades.get_children()
+					for u in current_upgrades: 
+						if u.upgrade.substr(0, 3) == upgrade.substr(0, 3) and u.has_method("update_level"):
+							u.update_level(upgrade)
 ""
 ```
 

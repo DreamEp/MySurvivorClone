@@ -5,7 +5,7 @@ extends Area2D
 @onready var collision = $CollisionShape2D
 @onready var disableTimer = $DisableTimer
 
-signal hurt(damage, angle, knockback) #On crée notre propre signal custom qui prend des dommage en argument + un angle + un kknockkback
+signal hurt(damage, angle, knockback, armor_penetration, magic_penetration) #On crée notre propre signal custom qui prend des dommage en argument + un angle + un kknockkback
 
 var hit_once_array = []
 
@@ -32,11 +32,17 @@ func _on_area_entered(area_entering):
 			var damage = area_entering.damage
 			var angle = Vector2.ZERO
 			var knockback = 1
+			var armor_penetration = 0
+			var magic_penetration = 0
 			if area_entering.get("angle") != null: #On check si ce qui entre dans l'area a un angle (on peut mettre not puis null)
 				angle = area_entering.angle #On recupere l'angle de l'objet entrant
 			if area_entering.get("knockback_amount") != null:
 				knockback = area_entering.knockback_amount #On recupere le knockback de l'objet entrant pour l'ajouter dans le signal de degat
-			emit_signal("hurt", damage, angle, knockback) #Ici on émet notre signal custom avec les dommages, dans notre cas lorsque on entre dans la zone hurtbox
+			if area_entering.get("armor_penetration") != null:
+				armor_penetration = area_entering.armor_penetration
+			if area_entering.get("magic_penetration") != null:
+				magic_penetration = area_entering.magic_penetration
+			emit_signal("hurt", damage, angle, knockback, armor_penetration, magic_penetration) #Ici on émet notre signal custom avec les dommages, dans notre cas lorsque on entre dans la zone hurtbox
 			if area_entering.has_method("enemy_hit"): #Si la personne/projectile qui entre dans l'area a une méthode ennemy hit
 				area_entering.enemy_hit(1) #On call cette méthode
 

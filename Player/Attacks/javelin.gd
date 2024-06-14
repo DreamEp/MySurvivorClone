@@ -45,6 +45,9 @@ func update_javelin():
 		1:
 			pierce = pierce
 			bullet_speed = bullet_speed
+			base_return_speed = base_return_speed
+			long_return_speed = long_return_speed
+			max_distance_from_player = max_distance_from_player
 			damage = damage
 			knockback_amount = knockback_amount
 			max_ennemy_numbers_paths = max_ennemy_numbers_paths
@@ -53,22 +56,28 @@ func update_javelin():
 			next_attack_delay = next_attack_delay
 			spawn_delay = spawn_delay
 		2:
-			pierce = pierce
-			bullet_speed = bullet_speed
-			damage = damage
-			knockback_amount = knockback_amount
+			bullet_speed += (level * 5)
+			knockback_amount += (level * 100)
 			max_ennemy_numbers_paths += 1
-			attack_area = attack_area
-			salve_attack_delay = salve_attack_delay	
-			next_attack_delay = next_attack_delay	
-			spawn_delay = spawn_delay
+		3:
+			bullet_speed += (level * 5)
+			knockback_amount += (level * 100)
+			max_ennemy_numbers_paths += 1
+		4:
+			bullet_speed += (level * 5)
+			knockback_amount += (level * 100)
+			max_ennemy_numbers_paths += 1
+		5:
+			bullet_speed += (level * 5)
+			knockback_amount += (level * 100)
+			next_attack_delay -= 3
+		
 	
 	var tween = create_tween()
 	#On change la valeur scale du node parent en multipliant un vecteur 1, 1 par l'area du projectile est en disant que celui ci grossis en 3 sec,  avec un effet ease_out
 	tween.tween_property(self, "scale", Vector2(1, 1) * attack_area, 3).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.play()
 	attackTimer.wait_time = salve_attack_delay #On set le delai entre les salves
-	changeDirectionTimer.wait_time = next_attack_delay #On set le délai entre les attaques
 
 #Cette fonction permet de déterminer le mouvement / comportement de notre javelot
 func _physics_process(delta):
@@ -130,12 +139,10 @@ func _on_change_direction_timeout():
 			emit_signal("remove_from_array", self) #On supprime de l'array cet ennemi pour pouvoir le retoucher par la suite
 		else:
 			changeDirectionTimer.stop() #Si il n'y a plus d'ennemi on set le timer changement de direction en stop
-			resetPosTimer.stop()
 			attackTimer.start() #On start le timer avant une nouvelle volée d'attaque
 			enable_attack(false) #On set notre javelot en mode attaque a false
 	else:
 		changeDirectionTimer.stop() #Si il n'y a plus d'ennemi on set le timer changement de direction en stop
-		resetPosTimer.stop()
 		attackTimer.start() #On start le timer avant une nouvelle volée d'attaque
 		enable_attack(false) #On set notre javelot en mode attaque a false
 
