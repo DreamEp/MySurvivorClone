@@ -1577,7 +1577,7 @@ func _on_player_character_body_2d_playerdeath():
   - The _trans define how the tween will comport itself during the duration [(here)](https://preview.redd.it/zdzhci8octp41.png?auto=webp&s=e26a297d816b53482ca2d0199ba71761fe54c3c7) for a good comportement visualization. By default SINE < CUBIC < QUINT
 - Blue node = 2D, Green one = Graphical User Interface, Red one = 3D
 - The pause mechanics is defined in each of the node in Process Mode, we can change here how the pause will process the node. We can set to inherit all the child so they act like the parent.
-- We can change the default scene in project settings run and set it to our menu pannel for exemple.
+- We can change the default scene in project settings run and set it to our menu pannel for exemple. 
 
 
 ## 7. Review/Missunderstanding : 
